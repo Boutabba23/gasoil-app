@@ -2,7 +2,7 @@
 import express, { Application, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import passport from 'passport'; // Passport global instance
+import passport from './config/passport'; // Passport global instance
 import connectDB from './config/db';
 import './config/passport'; // Important: This executes the passport configuration
 

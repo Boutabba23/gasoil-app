@@ -1,104 +1,85 @@
-// src/scripts/seedConversionTable.ts
+// server/src/scripts/seedConversionTable.ts
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import path from 'path'; // To resolve path to .env
+// Adjust paths if your file structure for config/db and models is different
+import connectDB from '../config/db';
+import ConversionTableEntry from '../models/ConversionTableEntry';
 
-import connectDB from '../config/db'; // Adjust path based on where seed script is run from
-import ConversionTableEntry from '../models/ConversionTableEntry'; // Adjust path
+// Make sure dotenv can find your .env file. If seed script is in server/src/scripts
+// and .env is in server/, then this relative path is correct.
+dotenv.config({ path: '../../../.env' }); // Go up from src/scripts to server/ then find .env
+                                      // Or more robustly:
+// import path from 'path';
+// dotenv.config({ path: path.resolve(process.cwd(), '.env') }); // if .env is in the dir you run the script from (server/)
 
-// Load .env file from the root of the 'backend' directory
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-
-// IMPORTANT: Populate this array with your ACTUAL conversion data
-// Every cm from 0 to 300 should ideally have an entry for precision.
-// These are placeholder values.
+// =======================================================================
+// === IMPORTANT: REPLACE THIS WITH YOUR ACTUAL CONVERSION TABLE DATA ===
+// === Every cm from 0 to 300 should ideally have an entry.           ===
+// =======================================================================
 const seedData = [
   { cm: 0, litres: 0 },
-  { cm: 10, litres: 250 }, // Fictional
-  { cm: 20, litres: 550 },
+  { cm: 1, litres: 50 },    // EXAMPLE VALUE
+  { cm: 2, litres: 105 },   // EXAMPLE VALUE
   // ... many more entries ...
-  { cm: 135, litres: 2450 }, // Example from prompt
+  { cm: 100, litres: 15000 }, // EXAMPLE VALUE
+  { cm: 135, litres: 24500 }, // Your example from the prompt (adjusted if needed)
   // ... many more entries ...
-  { cm: 290, litres: 49500 },
-  { cm: 300, litres: 50000 }, // Full capacity
+  { cm: 299, litres: 49900 }, // EXAMPLE VALUE
+  { cm: 300, litres: 50000 }, // Citerne pleine
 ];
-
-const generatedData: { cm: number, litres: number }[] = [];
-
-// Ensure all 301 entries (0cm to 300cm) are present or generate them linearly (APPROXIMATION)
-// THIS IS A VERY ROUGH APPROXIMATION. REPLACE WITH ACTUAL TANK CALIBRATION DATA.
-if (seedData.length < 301) {
-  console.warn("Conversion table data is sparse. Generating approximate values.");
-  console.warn("FOR PRODUCTION: PLEASE PROVIDE AN ACCURATE CALIBRATION TABLE FOR YOUR TANK.");
-  
-  let lastKnownGoodIndex = -1;
-  for (let i = 0; i <= 300; i++) {
-    const existingEntry = seedData.find(entry => entry.cm === i);
-    if (existingEntry) {
-      generatedData.push(existingEntry);
-      // Find the index in seedData to use for interpolation if next values are missing
-      const currentSeedIndex = seedData.indexOf(existingEntry);
-      if(currentSeedIndex > lastKnownGoodIndex) {
-        lastKnownGoodIndex = currentSeedIndex;
-      }
-
-    } else {
-      // Simple linear interpolation if surrounded by known points from seedData
-      // Or extrapolate from the last known point
-      let prevEntry = seedData[lastKnownGoodIndex];
-      let nextEntry = seedData.find((e, idx) => e.cm > i && idx > lastKnownGoodIndex);
-
-      if (prevEntry && nextEntry) {
-          const slope = (nextEntry.litres - prevEntry.litres) / (nextEntry.cm - prevEntry.cm);
-          const estimatedLitres = prevEntry.litres + slope * (i - prevEntry.cm);
-          generatedData.push({ cm: i, litres: Math.max(0, Math.round(estimatedLitres)) });
-      } else if (prevEntry) { // Extrapolate from last known
-          const litresPerCm = prevEntry.cm > 0 ? (prevEntry.litres / prevEntry.cm) : (50000/300) ; // rough if cm=0
-          const estimatedLitres = prevEntry.litres + litresPerCm * (i - prevEntry.cm);
-          generatedData.push({ cm: i, litres: Math.max(0, Math.min(50000, Math.round(estimatedLitres))) });
-      } else {
-          // Fallback to very basic linear scaling if no prior data
-          generatedData.push({ cm: i, litres: Math.round((i / 300) * 50000) });
-      }
-    }
-  }
-} else {
-  generatedData.push(...seedData);
-}
-
+// =======================================================================
 
 const importData = async () => {
-  await connectDB(); // Ensure DB is connected
   try {
+    // Make sure MONGODB_URI is loaded correctly by dotenv
+    if (!process.env.MONGODB_URI) {
+      console.error('Error: MONGODB_URI is not defined. Ensure .env file is loaded correctly.');
+      process.exit(1);
+    }
+    await connectDB(); // connectDB should handle the MONGODB_URI from process.env
+
     await ConversionTableEntry.deleteMany({}); // Clear existing data
-    await ConversionTableEntry.insertMany(generatedData);
-    console.log('Conversion table data imported successfully!');
-    mongoose.disconnect();
-    process.exit(0);
+    console.log('Existing conversion table entries deleted.');
+
+    // Validate data before insertion (optional but good)
+    for (const entry of seedData) {
+        if (typeof entry.cm !== 'number' || typeof entry.litres !== 'number' || entry.cm < 0 || entry.cm > 300 || entry.litres < 0) {
+            console.error(`Invalid data found: cm=${entry.cm}, litres=${entry.litres}. Skipping.`);
+            // continue; // Or throw an error to stop the seed
+        }
+    }
+
+    await ConversionTableEntry.insertMany(seedData);
+    console.log(`Successfully imported ${seedData.length} entries into conversionTable.`);
+    process.exit(0); // Exit successfully
   } catch (error) {
-    console.error('Error importing conversion table data:', error);
-    mongoose.disconnect();
-    process.exit(1);
+    console.error('Error during data import:', error);
+    process.exit(1); // Exit with error
   }
 };
 
 const destroyData = async () => {
-  await connectDB();
   try {
+    if (!process.env.MONGODB_URI) {
+      console.error('Error: MONGODB_URI is not defined.');
+      process.exit(1);
+    }
+    await connectDB();
     await ConversionTableEntry.deleteMany({});
-    console.log('Conversion table data destroyed!');
-    mongoose.disconnect();
+    console.log('Conversion table data destroyed successfully.');
     process.exit(0);
   } catch (error) {
-    console.error('Error destroying conversion table data:', error);
-    mongoose.disconnect();
+    console.error('Error during data destruction:', error);
     process.exit(1);
   }
 };
 
-if (process.argv.includes('-d')) {
+// Script execution logic
+if (process.argv.includes('-d')) { // Check if '-d' argument is present
+  console.log('Attempting to destroy conversion table data...');
   destroyData();
 } else {
+  console.log('Attempting to import conversion table data...');
   importData();
 }

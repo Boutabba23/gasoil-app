@@ -48,6 +48,8 @@ passport.use(
   )
 );
 
+export default passport;
+
 // We are not using sessions with Passport for this JWT-based auth,
 // so serializeUser and deserializeUser are not strictly needed if
 // `passport.authenticate('google', { session: false })` is used.
