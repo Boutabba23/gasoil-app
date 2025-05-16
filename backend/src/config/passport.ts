@@ -1,6 +1,6 @@
 // src/config/passport.ts
 import passport from 'passport';
-import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20';
+import { Strategy as GoogleStrategy, Profile , VerifyCallback} from 'passport-google-oauth20';
 import User, { IUser } from '../models/User'; // Assuming User model is defined
 import dotenv from 'dotenv';
 
@@ -21,19 +21,26 @@ passport.use(
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
       callbackURL: GOOGLE_CALLBACK_URL,
+      //authOptions.prompt: 'select_account', // Forcing it here too
+      // You might also experiment with 'consent' if 'select_account' doesn't work,
+      // though 'select_account' is more appropriate for choosing an account.
+      //prompt: 'consent select_account', // Can combine prompts
     },
-    async (accessToken: string, refreshToken: string, profile: Profile, done: (error: any, user?: any) => void) => {
-      try {
+ async (accessToken: string, refreshToken: string | undefined, profile: any, done: VerifyCallback) => { // Use any for profile or a more specific type
+      console.log("Passport Google Strategy: Profile received:", profile.displayName, profile.id);      try {
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {
+                    console.log("Passport Google Strategy: User found:", user.displayName);
+
           return done(null, user);
         }
+        console.log("Passport Google Strategy: Creating new user.");
 
         // If user doesn't exist, create a new one
         const newUser: IUser = new User({
           googleId: profile.id,
-          displayName: profile.displayName,
+          displayName: profile.displayName || "Utilisateur Google", // Fallback if displayName is not available
           email: profile.emails && profile.emails.length > 0 ? profile.emails[0].value : undefined,
           profilePicture: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : undefined,
         });

@@ -6,17 +6,39 @@ import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// Initiate Google OAuth flow
+// Initial redirect to Google
 router.get(
   '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'], session: false }) // session: false as we use JWT
+  (req, res, next) => { // Optional: Middleware to dynamically add prompt
+    const authOptions: passport.AuthenticateOptions = {
+      scope: ['profile', 'email'],
+      session: false, // If not using express-session with Passport for this strategy
+    };
+
+    // Check if the frontend sent a prompt preference
+    // This makes the frontend the primary controller of the prompt.
+    if (req.query.prompt) {
+      authOptions.prompt = req.query.prompt as string; // 'select_account' or 'consent' etc.
+    } else {
+      // If frontend doesn't send it, you can default it here (less flexible)
+      authOptions.prompt = 'select_account'; 
+    }
+    
+    console.log("Backend /google route: Authenticating with options:", authOptions);
+    passport.authenticate('google', authOptions)(req, res, next);
+  }
 );
 
-// Google OAuth callback
+// Callback from Google
 router.get(
   '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: `${process.env.CLIENT_URL}/login?error=google_auth_failed` }),
-  googleCallback
+  passport.authenticate('google', {
+    // failureRedirect is where Google redirects if IT finds an error with your request,
+    // or if the user denies access on Google's consent screen.
+    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5174'}/login?error=google_auth_failed`,
+    session: false, // Crucial if you're managing state with JWTs and not server sessions
+  }),
+  googleCallback // Your controller to handle user creation/login and JWT generation
 );
 
 // Get current authenticated user's info

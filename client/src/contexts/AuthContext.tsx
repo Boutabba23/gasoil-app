@@ -1,5 +1,6 @@
-import   { createContext, useState, useEffect, type ReactNode } from 'react';
-import api from '../lib/api'; // Votre client axios configuré
+import  { createContext, useState, useEffect, useContext } from 'react';
+import type {ReactNode} from 'react';
+import api from '../lib/api'; // Your configured axios instance
 
 interface User {
   _id: string;
@@ -12,57 +13,88 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  isLoading: boolean;
+  isLoading: boolean; // To track auth state loading, especially initial load
   login: (token: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>; // Logout can also be async if it needs to do cleanup
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Context is created but not exported; useAuth hook is the public interface
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [token, setToken] = useState<string | null>(() => {
+    // Initialize token from localStorage on component mount
+    const storedToken = localStorage.getItem('authToken');
+    console.log("AuthContext: Initial token from localStorage:", storedToken);
+    return storedToken;
+  });
+  // isLoading is true initially until we determine auth status
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const verifyTokenAndFetchUser = async () => {
+      console.log("AuthContext useEffect: Current token state:", token);
       if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         try {
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          console.log("AuthContext useEffect: Fetching /api/auth/me");
           const response = await api.get('/auth/me');
+          console.log("AuthContext useEffect: User fetched successfully:", response.data);
           setUser(response.data);
-        } catch (error) {
-          console.error("Failed to fetch user, token might be invalid", error);
+        } catch (error: any) {
+          console.error("AuthContext useEffect: Failed to fetch user, clearing token.", error.response?.data || error.message);
           localStorage.removeItem('authToken');
-          setToken(null);
           setUser(null);
-          api.defaults.headers.common['Authorization'] = '';
+          setToken(null); // This change to token will re-trigger the useEffect.
+          delete api.defaults.headers.common['Authorization'];
+          // setIsLoading(false) will be handled by the subsequent run of this useEffect when token becomes null
+          return; // Important to return here so isLoading isn't set to false prematurely
         }
+      } else {
+        // No token exists (or was cleared)
+        console.log("AuthContext useEffect: No token. Clearing user and API auth header.");
+        setUser(null);
+        delete api.defaults.headers.common['Authorization'];
       }
-      setIsLoading(false);
+      console.log("AuthContext useEffect: Setting isLoading to false.");
+      setIsLoading(false); // Set loading to false after attempting to fetch or if no token
     };
-    fetchUser();
-  }, [token]);
 
-  const login = async (newToken: string) => {
+    verifyTokenAndFetchUser();
+  }, [token]); // This effect depends only on the token state
+
+  const login = async (newToken: string): Promise<void> => {
+    console.log("AuthContext: login function called.");
     localStorage.setItem('authToken', newToken);
-    setToken(newToken);
-    setIsLoading(true); // Active le chargement pendant la récupération de l'utilisateur
-    // fetchUser sera appelé par le useEffect ci-dessus
+    // Set isLoading to true BEFORE setting the token
+    // This ensures ProtectedRoute shows loading while the useEffect processes the new token
+    setIsLoading(true); 
+    setToken(newToken); // This will trigger the useEffect above
   };
 
-  const logout = () => {
+  const logout = async (): Promise<void> => {
+    console.log("AuthContext: logout function called.");
     localStorage.removeItem('authToken');
-    setToken(null);
-    setUser(null);
-    api.defaults.headers.common['Authorization'] = '';
-    // Optionnel: appeler une route de logout backend pour invalider le token (si blacklist JWT)
-    // await api.post('/auth/logout');
+    delete api.defaults.headers.common['Authorization'];
+    // Set isLoading to true BEFORE setting the token to null
+    setIsLoading(true);
+    setToken(null); // This will trigger the useEffect, which then sets user to null and isLoading to false
   };
+
+  console.log("AuthContext rendering. isLoading:", isLoading, "Token:", token ? "Exists" : "None", "User:", user ? user.displayName : "None");
 
   return (
     <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider. Check your App.tsx component tree.');
+  }
+  return context;
 };

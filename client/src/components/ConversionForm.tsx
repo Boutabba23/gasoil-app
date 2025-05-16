@@ -1,85 +1,116 @@
-// client/src/components/ConversionForm.tsx
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import api from '../lib/api';
-import { toast } from "sonner"; // Correct import for Sonner's trigger
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // For inline messages
-import {  CheckCircle, AlertCircle } from "lucide-react"; // Icons for inline messages
+import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
-import{successToastClasses, destructiveToastClasses} from '@/lib/toastStyles';
+const successSonnerToastClasses = "bg-green-50 border-green-400 text-green-800 dark:bg-green-900/60 dark:border-green-700 dark:text-green-200 rounded-lg shadow-md p-4";
+const destructiveSonnerToastClasses = "bg-red-50 border-red-400 text-red-800 dark:bg-red-900/60 dark:border-red-700 dark:text-red-200 rounded-lg shadow-md p-4";
+const infoSonnerToastClasses = "bg-blue-50 border-blue-400 text-blue-800 dark:bg-blue-900/60 dark:border-blue-700 dark:text-blue-200 rounded-lg shadow-md p-4";
 
 interface ConversionFormProps {
-  onConversionSuccess: () => void; // Callback to refresh history or other actions
+  // Ensure the prop is correctly typed to expect a function
+  onConversionSuccess: (convertedLitres: number) => void; 
 }
 
 const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) => {
   const [cmValue, setCmValue] = useState<string>('');
-  const [result, setResult] = useState<string | null>(null); // For displaying result inline
-  const [inlineError, setInlineError] = useState<string | null>(null); // For displaying errors inline
+  const [result, setResult] = useState<string | null>(null);
+  const [inlineError, setInlineError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setInlineError(null); // Clear previous inline errors
-    setResult(null);     // Clear previous inline results
+    
+    setInlineError(null); 
+    setResult(null);     
 
-    // --- Input Validation ---
     if (!cmValue.trim()) {
       const msg = 'Veuillez entrer une valeur.';
       setInlineError(msg);
-      toast.error("Champ Requis", {
-        description: msg,
-        className: destructiveToastClasses,
-      });
+      toast.error("Champ Requis", { description: msg, className: destructiveSonnerToastClasses });
       return;
     }
 
     const numericCmValue = parseFloat(cmValue);
     if (isNaN(numericCmValue) || numericCmValue < 0 || numericCmValue > 300) {
-      const msg = 'Veuillez entrer une valeur numérique valide entre 0 et 300 cm.';
+      const msg = `Valeur en cm invalide. Doit être un nombre entre 0 et 300. Reçu: ${cmValue}`;
       setInlineError(msg);
-      toast.error("Valeur Invalide", {
-        description: msg,
-        className: destructiveToastClasses,
+      toast.error("Valeur Invalide", { description: msg, className: destructiveSonnerToastClasses });
+      return;
+    }
+
+    if (numericCmValue === 0) {
+      const baseMessage = "0 cm ➜ 0 L";
+      setResult(baseMessage);
+      setInlineError(null);
+      toast.info("Information", {
+        description: baseMessage,
+        className: infoSonnerToastClasses,
       });
+      // Log before calling for 0 cm case as well
+      console.log("ConversionForm: [0 cm case] Type of onConversionSuccess:", typeof onConversionSuccess);
+      if (typeof onConversionSuccess === 'function') {
+        onConversionSuccess(0); 
+      } else {
+        console.error("ConversionForm: [0 cm case] onConversionSuccess prop is NOT a function! Value:", onConversionSuccess);
+      }
+      setCmValue('');        
       return;
     }
 
     setIsLoading(true);
     try {
-      // --- API Call ---
+      console.log(`ConversionForm: Attempting API call for cmValue: ${numericCmValue}`);
       const response = await api.post('/data/convert', { value_cm: numericCmValue });
-      const successMessage = `${response.data.value_cm} cm ➜ ${response.data.volume_l} L`;
-      setResult(successMessage); // Set inline result
+      console.log("ConversionForm: API Response SUCCESS", response.data);
 
-      // --- Success Toast ---
+      const successMessage = `${response.data.value_cm} cm ➜ ${response.data.volume_l} L`;
+      
+      setResult(successMessage);
+      setInlineError(null); 
       toast.success("Conversion Réussie", {
-        description: successMessage, // You can customize this description
-        className: successToastClasses,
+        description: successMessage,
+        className: successSonnerToastClasses,
       });
 
-      onConversionSuccess(); // Trigger callback (e.g., to refresh history table)
-      setCmValue('');        // Reset input field
-    } catch (err: any) {
-      console.error("API Error in ConversionForm:", err);
-      const apiErrorMessage = err.response?.data?.message || "Une erreur est survenue lors de la conversion.";
-      setInlineError(apiErrorMessage); // Set inline error
+      // --- Debugging onConversionSuccess ---
+      console.log("ConversionForm: Type of onConversionSuccess:", typeof onConversionSuccess);
+      console.log("ConversionForm: Is onConversionSuccess a function?", onConversionSuccess instanceof Function);
+      if (typeof onConversionSuccess === 'function') {
+        onConversionSuccess(response.data.volume_l); // Call the prop function
+        console.log("ConversionForm: onConversionSuccess called successfully.");
+      } else {
+        console.error("ConversionForm: onConversionSuccess prop is NOT a function! Value:", onConversionSuccess);
+        // To make the error more explicit if this is the cause:
+        // throw new Error("CRITICAL: onConversionSuccess prop was not a function when expected."); 
+      }
+      // --- End Debugging ---
 
-      // --- Error Toast ---
+      setCmValue('');
+    } catch (err: any) {
+      // This catch block should now primarily handle actual API/network errors,
+      // not errors from within the try block's success path.
+      console.error("ConversionForm: API Call FAILED or error in post-API logic inside try.", err);
+      // Detailed error logging from previous step remains useful here
+      const apiErrorMessage = err.response?.data?.message || (err.message || "Une erreur technique est survenue. Veuillez réessayer.");
+      setInlineError(apiErrorMessage);
+      setResult(null);
       toast.error("Erreur de Conversion", {
         description: apiErrorMessage,
-        className: destructiveToastClasses,
+        className: destructiveSonnerToastClasses,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ... rest of the JSX form structure (no changes needed there for this specific debug)
   return (
-    <form onSubmit={handleSubmit} className="space-y-6"> {/* Increased space for better layout */}
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <Label htmlFor="cm-value" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Valeur de Jauge (en cm)
@@ -90,25 +121,22 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
           value={cmValue}
           onChange={(e) => {
             setCmValue(e.target.value);
-            if (inlineError) setInlineError(null); // Clear inline error on input change
-            if (result) setResult(null);         // Clear inline result on input change
+            if (inlineError) setInlineError(null); 
+            if (result) setResult(null);         
           }}
           placeholder="Ex: 135"
           min="0"
           max="300"
-          step="0.1" // Allow decimals, or use "1" for whole numbers
+          step="0.1"
           className="mt-1 block w-full shadow-sm sm:text-sm rounded-md dark:bg-slate-700 dark:text-slate-50 dark:border-slate-600"
-          required // HTML5 validation
+          required
         />
       </div>
 
       <Button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
         {isLoading ? (
           <>
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+            <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
             Conversion en cours...
           </>
         ) : (
@@ -116,18 +144,17 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
         )}
       </Button>
 
-      {/* Optional: Inline messages for immediate feedback in the form */}
-      {inlineError && !isLoading && (
+      {!isLoading && inlineError && (
         <Alert variant="destructive" className="mt-4 bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700">
-          <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
-          <AlertTitle className="font-semibold text-red-700 dark:text-red-300">Erreur de saisie</AlertTitle>
-          <AlertDescription className="text-red-600 dark:text-red-400">{inlineError}</AlertDescription>
+            <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
+            <AlertTitle className="font-semibold text-red-700 dark:text-red-300">Erreur</AlertTitle>
+            <AlertDescription className="text-red-600 dark:text-red-400">{inlineError}</AlertDescription>
         </Alert>
       )}
-      {result && !isLoading && (
-         <Alert variant="default" className="mt-4 bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700">
+      {!isLoading && !inlineError && result && ( 
+        <Alert variant="default" className="mt-4 bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700">
             <CheckCircle className="h-5 w-5 text-green-500 dark:text-green-400" />
-            <AlertTitle className="font-semibold text-green-700 dark:text-green-300">Résultat de la Conversion</AlertTitle>
+            <AlertTitle className="font-semibold text-green-700 dark:text-green-300">Résultat</AlertTitle>
             <AlertDescription className="text-green-600 dark:text-green-400">{result}</AlertDescription>
         </Alert>
       )}

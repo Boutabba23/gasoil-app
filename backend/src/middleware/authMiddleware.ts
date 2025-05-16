@@ -27,13 +27,13 @@ export const protect = async (req: AuthenticatedRequest, res: Response, next: Ne
 
       // Get user from the token (assuming googleId is stored in JWT)
       // If you store the MongoDB _id in JWT, query by _id
-      const user = await User.findOne({ googleId: decoded.googleId }).select('-password'); // Exclude password if you had one
+      const userFromDb: IUser | null = await User.findOne({ googleId: decoded.googleId }).select('-__v');
 
-      if (!user) {
+      if (!userFromDb) {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
-      req.user = user; // Attach user to the request object
+      req.user = userFromDb; // Attach user to the request object
       next();
     } catch (error) {
       console.error('Token verification failed:', error);

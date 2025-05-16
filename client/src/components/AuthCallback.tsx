@@ -1,65 +1,75 @@
 // client/src/components/AuthCallback.tsx
-
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth'; // Your authentication context hook
-import { toast } from "sonner"; // Correct import for Sonner's trigger function
-import { Loader2 } from 'lucide-react'; // Optional: for a loading spinner
+// 👇 UPDATED IMPORT PATH
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from "sonner";
+import { Loader2 } from 'lucide-react';
 
-import{successToastClasses, destructiveToastClasses} from '@/lib/toastStyles';
+// ... (rest of AuthCallback.tsx from previous message, ensure useAuth import is updated) ...
+//const successSonnerToastClasses = "bg-green-50 border-green-400 text-green-800 dark:bg-green-900/60 dark:border-green-700 dark:text-green-200 rounded-lg shadow-md p-4";
+const destructiveSonnerToastClasses = "bg-red-50 border-red-400 text-red-800 dark:bg-red-900/60 dark:border-red-700 dark:text-red-200 rounded-lg shadow-md p-4";
 
 const AuthCallback: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login } = useAuth(); // The login function from your AuthContext
+  const { login, isLoading } = useAuth(); // isLoading might be useful here too
+
+  console.log("AuthCallback mounted. Location:", location);
 
   useEffect(() => {
+    console.log("AuthCallback useEffect triggered. isLoading:", isLoading);
     const params = new URLSearchParams(location.search);
-    const token = params.get('token'); // Token passed from backend after successful OAuth
-    const error = params.get('error');   // Error message passed from backend if OAuth failed
+    const token = params.get('token');
+    const error = params.get('error');
+
+    console.log("AuthCallback: Token from URL:", token);
+    console.log("AuthCallback: Error from URL:", error);
 
     if (error) {
-      console.error("Google Authentication Error (from backend callback):", error);
-      toast.error("Erreur d'Authentification", {
-        description: "La connexion avec Google a échoué. Veuillez réessayer ou contacter le support si le problème persiste.",
-        className: destructiveToastClasses, // Apply destructive styles
+      console.error("Google Auth Error (from URL):", error);
+      toast.error("Erreur d'authentification", {
+        description: "La connexion avec Google a échoué. Veuillez réessayer.",
+        className: destructiveSonnerToastClasses,
       });
-      navigate('/login'); // Redirect back to the login page (or home)
+      navigate('/login');
       return;
     }
 
     if (token) {
-      // Attempt to log in the user with the received token
+      console.log("AuthCallback: Attempting login with token...");
       login(token)
         .then(() => {
-          // Login function in AuthContext usually handles setting the token and fetching user data
-          toast.success("Connexion Réussie", {
-            description: "Vous êtes maintenant connecté et allez être redirigé.",
-            className: successToastClasses, // Apply success styles
-          });
-          navigate('/dashboard'); // Redirect to the main application dashboard
+          console.log("AuthCallback: AuthContext login process finished, navigating to dashboard.");
+          // Toast can be shown here or upon successful user fetch in AuthContext, depending on UX preference
+          // toast.success("Connexion Réussie", { description: "Redirection...", className: successSonnerToastClasses });
+          navigate('/dashboard');
         })
         .catch(err => {
-          // This catch block handles errors from your AuthContext's login function
-          // (e.g., if /api/auth/me fails after setting the token)
-          console.error("Login process failed after token reception:", err);
+          console.error("AuthCallback: AuthContext login function promise rejected:", err);
           toast.error("Finalisation de la Connexion Échouée", {
-            description: "Une erreur est survenue lors de la vérification de votre session. Veuillez réessayer.",
-            className: destructiveToastClasses, // Apply destructive styles
+            description: "Une erreur est survenue. Veuillez réessayer.",
+            className: destructiveSonnerToastClasses,
           });
-          navigate('/login'); // Redirect back to login
+          navigate('/login');
         });
     } else {
-      // This case should ideally not happen if the backend always provides a token or an error
-      console.error("AuthCallback: No token or error found in URL parameters.");
-      toast.error("Problème d'Authentification", {
-        description: "Les informations de connexion nécessaires sont manquantes. Redirection...",
-        className: destructiveToastClasses, // Apply destructive styles
-      });
-      navigate('/login'); // Redirect back to login
+      // Only navigate if not already in an auth loading state (e.g. from a previous attempt)
+      // and if this component isn't just quickly unmounting due to successful login
+      if (!isLoading && !error) { // If no token, no error, and not already loading
+        console.warn("AuthCallback: No token and no error in URL parameters, navigating to login.");
+        toast.error("Problème d'authentification", {
+            description: "Informations de connexion manquantes.",
+            className: destructiveSonnerToastClasses,
+        });
+        navigate('/login');
+      } else if (isLoading) {
+          console.log("AuthCallback: isLoading is true, likely auth in progress, waiting.")
+      }
     }
-    // login function is a dependency for this effect if its identity can change.
-  }, [location, navigate, login]);
+    // Removed login from dependency array to avoid re-triggering if login function identity changes unnecessarily.
+    // The effect should run based on location changes.
+  }, [location, navigate, isLoading]); // Add isLoading to prevent premature navigation if auth is slow.
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900 p-6 text-center">
@@ -70,9 +80,7 @@ const AuthCallback: React.FC = () => {
       <p className="text-slate-500 dark:text-slate-400">
         Veuillez patienter pendant que nous vérifions votre session.
       </p>
-      {/* The Sonner <Toaster /> component should be in your App.tsx or a root layout */}
     </div>
   );
 };
-
 export default AuthCallback;

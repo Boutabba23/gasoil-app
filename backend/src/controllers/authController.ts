@@ -52,17 +52,21 @@ export const logout = (req: AuthenticatedRequest, res: Response): Response => {
   // For this basic setup, we'll just acknowledge.
   
   // If using sessions, it would be:
-  // req.logout((err) => {
-  //   if (err) { return next(err); }
-  //   req.session.destroy((err) => {
-  //     if (err) {
-  //       console.error('Session destruction error:', err);
-  //       return res.status(500).json({ message: "Could not log out."});
-  //     }
-  //     res.clearCookie('connect.sid'); // Or your session cookie name
-  //     res.status(200).json({ message: 'Logged out successfully' });
-  //   });
-  // });
+  req.logout((err) => {
+     if (err) { return next(err); }
+     req.session.destroy((err) => {
+       if (err) {
+         console.error('Session destruction error:', err);
+         return res.status(500).json({ message: "Could not log out."});
+       }
+       res.clearCookie('connect.sid'); // Or your session cookie name
+       res.status(200).json({ message: 'Logged out successfully' });
+     });
+   });
 
   return res.status(200).json({ message: 'Logged out successfully (client should clear token)' });
 };
+
+function next(err: any): void {
+  throw new Error('Function not implemented.');
+}

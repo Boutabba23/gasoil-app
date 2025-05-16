@@ -7,16 +7,35 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption, // Optional: for "No data" message
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns'; // Pour formater les dates
-import { fr } from 'date-fns/locale';   // Pour le format français
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Trash2, AlertTriangle, Loader2, Frown } from 'lucide-react'; // Icons
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  //AlertDialogTrigger, // Keep if triggering directly, or manage open state
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import type { DateRange } from "react-day-picker"; // Type for dateRange prop
+
+// Define or import Sonner toast variant classes
+const successSonnerToastClasses = "bg-green-50 border-green-400 text-green-800 dark:bg-green-900/60 dark:border-green-700 dark:text-green-200 rounded-lg shadow-md p-4";
+const destructiveSonnerToastClasses = "bg-red-50 border-red-400 text-red-800 dark:bg-red-900/60 dark:border-red-700 dark:text-red-200 rounded-lg shadow-md p-4";
 
 interface ConversionRecord {
   _id: string;
   value_cm: number;
   volume_l: number;
-  createdAt: string; // Date ISO String
+  createdAt: string;
 }
 
 interface PaginatedResponse {
@@ -26,90 +45,223 @@ interface PaginatedResponse {
   totalItems: number;
 }
 
-const HistoryTable: React.FC = () => {
+interface HistoryTableProps {
+  searchTerm?: string;
+  dateRange?: DateRange | undefined;
+  // key prop from parent can also trigger re-fetch if filters change there
+}
+
+const HistoryTable: React.FC<HistoryTableProps> = ({ searchTerm, dateRange }) => {
   const [history, setHistory] = useState<ConversionRecord[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null); // Store ID of item being deleted for spinner
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0); // Keep track of total items
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<ConversionRecord | null>(null);
+
   const itemsPerPage = 10;
 
-  const fetchHistory = useCallback(async (page: number) => {
+  const fetchHistory = useCallback(async (pageToFetch: number) => {
+    console.log(`Fetching history for page: ${pageToFetch}, search: ${searchTerm}, date:`, dateRange);
     setIsLoading(true);
     setError(null);
     try {
-      const response = await api.get<PaginatedResponse>(`/data/history?page=${page}&limit=${itemsPerPage}`);
+      let apiUrl = `/data/history?page=${pageToFetch}&limit=${itemsPerPage}`;
+      if (searchTerm) apiUrl += `&search=${encodeURIComponent(searchTerm)}`;
+      if (dateRange?.from) apiUrl += `&from=${dateRange.from.toISOString().split('T')[0]}`; // Send YYYY-MM-DD
+      if (dateRange?.to) apiUrl += `&to=${dateRange.to.toISOString().split('T')[0]}`;       // Send YYYY-MM-DD
+      
+      const response = await api.get<PaginatedResponse>(apiUrl);
       setHistory(response.data.data);
       setCurrentPage(response.data.currentPage);
       setTotalPages(response.data.totalPages);
+      setTotalItems(response.data.totalItems);
+
+      // If current page becomes empty after deletion/filtering and it's not the first page, go back.
+      if (response.data.data.length === 0 && pageToFetch > 1 && response.data.totalItems > 0) {
+        setCurrentPage(Math.max(1, pageToFetch - 1)); // This will trigger another fetch due to currentPage change
+      }
+
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || "Erreur lors du chargement de l'historique.");
+      console.error("Error fetching history:", err);
+      const errorMessage = err.response?.data?.message || "Erreur lors du chargement de l'historique.";
+      setError(errorMessage);
+      toast.error("Erreur Historique", { description: errorMessage, className: destructiveSonnerToastClasses });
     } finally {
       setIsLoading(false);
     }
-  }, [itemsPerPage]); // itemsPerPage est constant, mais on le met par bonne pratique
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, dateRange, itemsPerPage]); // currentPage is handled by its own useEffect trigger
 
   useEffect(() => {
     fetchHistory(currentPage);
-  }, [fetchHistory, currentPage]); // Re-fetch si fetchHistory ou currentPage change
+  }, [currentPage, fetchHistory]); // fetchHistory reference changes if searchTerm or dateRange changes
 
-  if (isLoading && history.length === 0) { // Afficher chargement initial seulement
-    return <p>Chargement de l'historique...</p>;
+  const handleDeleteClick = (record: ConversionRecord) => {
+    setItemToDelete(record);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeletingId(itemToDelete._id); // Show spinner on the specific row's button
+    try {
+      await api.delete(`/data/history/${itemToDelete._id}`);
+      toast.success("Suppression Réussie", {
+        description: `L'entrée du ${format(new Date(itemToDelete.createdAt), 'dd/MM/yyyy HH:mm', { locale: fr })} a été supprimée.`,
+        className: successSonnerToastClasses,
+      });
+      // Refetch history for the current page
+      // If it was the last item on a page (and not page 1), the fetchHistory logic will handle going to prev page.
+      // Or, to be more precise after deletion:
+      if (history.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1); // This will trigger fetchHistory
+      } else {
+        fetchHistory(currentPage); // Re-fetch current page
+      }
+    } catch (err: any) {
+      console.error("Error deleting history entry:", err);
+      const errorMessage = err.response?.data?.message || "Erreur lors de la suppression.";
+      toast.error("Erreur de Suppression", { description: errorMessage, className: destructiveSonnerToastClasses });
+    } finally {
+      setIsDeletingId(null);
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+    }
+  };
+
+  if (isLoading && history.length === 0) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="ml-3 text-muted-foreground">Chargement de l'historique...</p>
+      </div>
+    );
   }
 
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
+  if (error && history.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <AlertTriangle className="mx-auto h-10 w-10 text-destructive mb-3" />
+        <p className="text-destructive font-medium">Erreur de chargement</p>
+        <p className="text-sm text-muted-foreground">{error}</p>
+        <Button onClick={() => fetchHistory(currentPage)} variant="outline" className="mt-4">
+          Réessayer
+        </Button>
+      </div>
+    );
   }
-
-  if (history.length === 0 && !isLoading) {
-    return <p>Aucun prélèvement enregistré pour le moment.</p>;
-  }
-
+  
   return (
     <div className="space-y-4">
       <Table>
+        {!isLoading && history.length === 0 && (
+          <TableCaption className="py-10">
+            <div className="flex flex-col items-center gap-2">
+                <Frown className="h-10 w-10 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">Aucun enregistrement trouvé.</p>
+                { (searchTerm || dateRange?.from) && 
+                  <p className="text-sm text-muted-foreground">Essayez d'ajuster vos filtres.</p>
+                }
+            </div>
+          </TableCaption>
+        )}
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Heure</TableHead>
-            <TableHead className="text-right">Valeur (cm)</TableHead>
-            <TableHead className="text-right">Volume (L)</TableHead>
+            <TableHead className="w-[150px]">Date</TableHead>
+            <TableHead className="w-[120px]">Heure</TableHead>
+            <TableHead className="text-right w-[100px]">Jauge (cm)</TableHead>
+            <TableHead className="text-right w-[120px]">Volume (L)</TableHead>
+            <TableHead className="text-right w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {history.map((record) => (
+          {isLoading && history.length > 0 && ( // Show loading overlay on table if refreshing
+            <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                </TableCell>
+            </TableRow>
+          )}
+          {!isLoading && history.map((record) => (
             <TableRow key={record._id}>
               <TableCell>{format(new Date(record.createdAt), 'dd/MM/yyyy', { locale: fr })}</TableCell>
               <TableCell>{format(new Date(record.createdAt), 'HH:mm:ss', { locale: fr })}</TableCell>
-              <TableCell className="text-right">{record.value_cm.toFixed(1)}</TableCell> {/* Ajustez le nombre de décimales */}
-              <TableCell className="text-right">{record.volume_l.toFixed(2)}</TableCell> {/* Ajustez le nombre de décimales */}
+              <TableCell className="text-right">{record.value_cm.toFixed(1)}</TableCell>
+              <TableCell className="text-right">{record.volume_l.toFixed(2)}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteClick(record)}
+                  disabled={isDeletingId === record._id}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  {isDeletingId === record._id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">Supprimer</span>
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2 mt-4">
+      {totalPages > 1 && !isLoading && (
+        <div className="flex justify-center items-center space-x-2 mt-6">
           <Button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1 || isLoading}
+            disabled={currentPage === 1}
             variant="outline"
           >
             Précédent
           </Button>
-          <span className="text-sm">
-            Page {currentPage} sur {totalPages}
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} sur {totalPages} ({totalItems} éléments)
           </span>
           <Button
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages || isLoading}
+            disabled={currentPage === totalPages}
             variant="outline"
           >
             Suivant
           </Button>
         </div>
       )}
+
+      {/* Confirmation Dialog for Deletion */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. L'entrée pour{' '}
+              {itemToDelete && `${itemToDelete.value_cm.toFixed(1)} cm (${itemToDelete.volume_l.toFixed(2)} L)`}
+              {' '}du{' '}
+              {itemToDelete && format(new Date(itemToDelete.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+              {' '}sera définitivement supprimée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setItemToDelete(null)} disabled={!!isDeletingId}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={!!isDeletingId}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
