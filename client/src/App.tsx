@@ -20,9 +20,8 @@ function App() {
           <Route element={<ProtectedRoute />}> {/* ProtectedRoute uses useAuth */}
             <Route path="/dashboard" element={<DashboardLayout />}> {/* DashboardLayout uses useAuth (via itself or Sidebar) */}
               <Route index element={<Navigate to="conversion" replace />} />
-              <Route path="conversion" element={<ConversionPage onConversionSuccess={function (): void {
-                throw new Error('Function not implemented.');
-              } } />} />
+                            <Route path="conversion" element={<ConversionPage />} /> 
+
               <Route path="historique" element={<HistoriquePage />} />
             </Route>
           </Route>

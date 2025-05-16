@@ -26,18 +26,10 @@ const ConversionPage: React.FC = () => {
     fetchLatestLevel();
   }, []);
 
-  // This function IS passed as the onConversionSuccess prop
+  // This IS the function that should be called
   const handleConversionSuccess = (convertedLitres: number) => {
-    console.log("ConversionPage: handleConversionSuccess CALLED with litres:", convertedLitres);
-    // Ensure setCurrentLitres is a valid state setter
-    if (typeof setCurrentLitres === 'function') {
-        setCurrentLitres(convertedLitres);
-        console.log("ConversionPage: setCurrentLitres was called.");
-    } else {
-        console.error("ConversionPage: setCurrentLitres is NOT a function! This is unexpected.");
-    }
-    // If you also get cm value from form:
-    // setLastCmValue(cmValueFromForm); 
+    console.log("ConversionPage: Correct handleConversionSuccess CALLED with litres:", convertedLitres);
+    setCurrentLitres(convertedLitres);
   };
 
   const progressValue = currentLitres !== null ? Math.min(100, Math.max(0, (currentLitres / MAX_LITRES) * 100)) : 0;
