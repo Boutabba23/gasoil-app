@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Trash2, AlertTriangle, Loader2, Frown } from 'lucide-react'; // Icons
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +53,7 @@ interface HistoryTableProps {
 }
 
 const HistoryTable: React.FC<HistoryTableProps> = ({ searchTerm, dateRange }) => {
+  
   const [history, setHistory] = useState<ConversionRecord[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null); // Store ID of item being deleted for spinner
@@ -66,41 +68,61 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ searchTerm, dateRange }) =>
   const itemsPerPage = 10;
 
   const fetchHistory = useCallback(async (pageToFetch: number) => {
-    console.log(`Fetching history for page: ${pageToFetch}, search: ${searchTerm}, date:`, dateRange);
     setIsLoading(true);
     setError(null);
+    console.log(`HistoryTable: Fetching history for page: ${pageToFetch}, search: '${searchTerm}', dateRange:`, dateRange);
+
     try {
-      let apiUrl = `/data/history?page=${pageToFetch}&limit=${itemsPerPage}`;
-      if (searchTerm) apiUrl += `&search=${encodeURIComponent(searchTerm)}`;
-      if (dateRange?.from) apiUrl += `&from=${dateRange.from.toISOString().split('T')[0]}`; // Send YYYY-MM-DD
-      if (dateRange?.to) apiUrl += `&to=${dateRange.to.toISOString().split('T')[0]}`;       // Send YYYY-MM-DD
+      const params = new URLSearchParams({
+        page: pageToFetch.toString(),
+        limit: itemsPerPage.toString(),
+      });
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+      if (dateRange?.from) {
+        // Format date to YYYY-MM-DD for backend compatibility, ensure it's UTC based
+        params.append('from', format(dateRange.from, 'yyyy-MM-dd'));
+      }
+      if (dateRange?.to) {
+        params.append('to', format(dateRange.to, 'yyyy-MM-dd'));
+      }
       
-      const response = await api.get<PaginatedResponse>(apiUrl);
+      const response = await api.get<PaginatedResponse>(`/data/history?${params.toString()}`);
+      
       setHistory(response.data.data);
       setCurrentPage(response.data.currentPage);
       setTotalPages(response.data.totalPages);
       setTotalItems(response.data.totalItems);
 
-      // If current page becomes empty after deletion/filtering and it's not the first page, go back.
       if (response.data.data.length === 0 && pageToFetch > 1 && response.data.totalItems > 0) {
-        setCurrentPage(Math.max(1, pageToFetch - 1)); // This will trigger another fetch due to currentPage change
+        setCurrentPage(pageToFetch - 1); // This will re-trigger fetch due to useEffect dependency on currentPage
       }
-
     } catch (err: any) {
-      console.error("Error fetching history:", err);
+      console.error("Error fetching history:", err.response?.data || err.message);
       const errorMessage = err.response?.data?.message || "Erreur lors du chargement de l'historique.";
       setError(errorMessage);
-      toast.error("Erreur Historique", { description: errorMessage, className: destructiveSonnerToastClasses });
+      // Avoid redundant toasts if HistoriquePage also shows one for general fetch errors
+      // toast.error("Erreur Historique", { description: errorMessage, className: destructiveSonnerToastClasses });
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, dateRange, itemsPerPage]); // currentPage is handled by its own useEffect trigger
+  }
+ 
+  , [searchTerm, dateRange, itemsPerPage]); // currentPage is handled by its own useEffect trigger
 
   useEffect(() => {
     fetchHistory(currentPage);
   }, [currentPage, fetchHistory]); // fetchHistory reference changes if searchTerm or dateRange changes
 
+  useEffect(() => {
+      // When searchTerm or dateRange props change, reset to page 1
+      console.log("HistoryTable: Filters (searchTerm or dateRange) changed, resetting to page 1.");
+      setCurrentPage(1); 
+      // This will trigger the above useEffect to fetch data for page 1 with new filters.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, dateRange]); // Only dependent on the filter props themselves
+  // --- END ADDED USEEFFECT ---
   const handleDeleteClick = (record: ConversionRecord) => {
     setItemToDelete(record);
     setShowDeleteConfirm(true);

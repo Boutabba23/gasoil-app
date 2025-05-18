@@ -2,6 +2,7 @@
 import dotenv from 'dotenv';
 // Adjust paths if your file structure for config/db and models is different
 import connectDB from '../config/db';
+import  seedData  from '../scripts/seed';
 import ConversionTableEntry from '../models/ConversionTableEntry';
 
 // Make sure dotenv can find your .env file. If seed script is in server/src/scripts
@@ -16,17 +17,7 @@ dotenv.config({ path: '../../../.env' }); // Go up from src/scripts to server/ t
 // === IMPORTANT: REPLACE THIS WITH YOUR ACTUAL CONVERSION TABLE DATA ===
 // === Every cm from 0 to 300 should ideally have an entry.           ===
 // =======================================================================
-const seedData = [
-  { cm: 0, litres: 0 },
-  { cm: 1, litres: 50 },    // EXAMPLE VALUE
-  { cm: 2, litres: 105 },   // EXAMPLE VALUE
-  // ... many more entries ...
-  { cm: 100, litres: 15000 }, // EXAMPLE VALUE
-  { cm: 135, litres: 24500 }, // Your example from the prompt (adjusted if needed)
-  // ... many more entries ...
-  { cm: 299, litres: 49900 }, // EXAMPLE VALUE
-  { cm: 300, litres: 50000 }, // Citerne pleine
-];
+
 // =======================================================================
 
 const importData = async () => {

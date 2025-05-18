@@ -10,7 +10,10 @@ import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 const successSonnerToastClasses = "bg-green-50 border-green-400 text-green-800 dark:bg-green-900/60 dark:border-green-700 dark:text-green-200 rounded-lg shadow-md p-4";
 const destructiveSonnerToastClasses = "bg-red-50 border-red-400 text-red-800 dark:bg-red-900/60 dark:border-red-700 dark:text-red-200 rounded-lg shadow-md p-4";
 const infoSonnerToastClasses = "bg-blue-50 border-blue-400 text-blue-800 dark:bg-blue-900/60 dark:border-blue-700 dark:text-blue-200 rounded-lg shadow-md p-4";
-
+interface ConversionSuccessData {
+  litres: number;
+  cm: number; // The CM value that was converted
+}
 interface ConversionFormProps {
   // UPDATED: Expect an object with litres and cm
   onConversionSuccess: (data: { litres: number; cm: number }) => void; 
@@ -52,6 +55,9 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
         description: baseMessage,
         className: infoSonnerToastClasses,
       });
+      onConversionSuccess({ litres: 0, cm: 0 }); 
+      setCmValue('');        
+     
       // Log before calling for 0 cm case as well
       console.log("ConversionForm: [0 cm case] Type of onConversionSuccess:", typeof onConversionSuccess);
       if (typeof onConversionSuccess === 'function') {
@@ -77,7 +83,12 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
         description: successMessage,
         className: successSonnerToastClasses,
       });
-
+       // 👇 Pass an object with both litres and the original cm value from response
+      onConversionSuccess({ 
+          litres: response.data.volume_l, 
+          cm: response.data.value_cm 
+      });
+      setCmValue('');
       // --- Debugging onConversionSuccess ---
       console.log("ConversionForm: Type of onConversionSuccess:", typeof onConversionSuccess);
       console.log("ConversionForm: Is onConversionSuccess a function?", onConversionSuccess instanceof Function);
@@ -134,7 +145,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
         />
       </div>
 
-      <Button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
+      <Button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#FE5D26] hover:bg-[#ff8367] focus:outline-none focus:ring-2 hover:cursor-pointer focus:ring-offset-2 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
         {isLoading ? (
           <>
             <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />

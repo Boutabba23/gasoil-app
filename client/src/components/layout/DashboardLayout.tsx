@@ -21,8 +21,9 @@ import {
   SlidersHorizontal, // Icon for Conversion
   History,           // Icon for Historique
   LogOut,            // Icon for Logout
-  Fuel,              // Icon for App Logo
-  MenuIcon           // Icon for Mobile Sidebar Trigger
+               // Icon for App Logo
+  MenuIcon,           // Icon for Mobile Sidebar Trigger
+  UserCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +54,7 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <SidebarProvider defaultOpen={true}> {/* Sidebar open by default on desktop */}
-      <div className="flex min-h-screen  dark:bg-slate-950"> {/* Overall page background */}
+      <div className="flex min-h-screen w-full dark:bg-slate-950"> {/* Overall page background */}
         
         <ShadcnAppSidebar 
           collapsible="icon" // Sidebar collapses to icons
@@ -79,7 +80,7 @@ const DashboardLayout: React.FC = () => {
             </Link>
           </SidebarHeader>
 
-          <SidebarContent className="p-2 flex-1"> {/* flex-1 ensures it takes available space */}
+          <SidebarContent className="p-2 flex-1 group-[[data-state=collapsed]]:grid group-[[data-state=collapsed]]:justify-center"> {/* flex-1 ensures it takes available space */}
             <SidebarMenu>
               {navItems.map((item) => {
                 const IconComponent = item.icon;
@@ -92,7 +93,7 @@ const DashboardLayout: React.FC = () => {
                       tooltip={item.label}
                       size="default"
                       className={cn( // Custom active styles if needed beyond variant="secondary"
-                        isActive && "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground"
+                        isActive && "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground group-[[data-state=collapsed]]:justify-center"
                       )}
                     >
                       <Link to={item.href}> 
@@ -106,34 +107,40 @@ const DashboardLayout: React.FC = () => {
             </SidebarMenu>
           </SidebarContent>
 
-          <SidebarFooter className="p-3 border-t dark:border-slate-800 space-y-2"> {/* Added space-y-2 */}
+          <SidebarFooter className="p-3 border-t dark:border-slate-800 items-center space-y-2"> {/* Added space-y-2 */}
             {user && (
-              <div className={cn(
-                "flex items-center gap-3 p-2 rounded-md", // Removed hover to make it static info
-                "group-[[data-state=collapsed]]:justify-center group-[[data-state=collapsed]]:p-1 group-[[data-state=collapsed]]:size-10"
-              )}>
-                <Avatar className={cn(
-                    "h-9 w-9 border",
-                    "group-[[data-state=collapsed]]:h-8 group-[[data-state=collapsed]]:w-8"
-                )}>
-                  <AvatarImage src={user.profilePicture} alt={user.displayName || 'Avatar'} />
-                  <AvatarFallback>{user.displayName ? user.displayName.substring(0, 1).toUpperCase() : 'U'}</AvatarFallback>
-                </Avatar>
-                <div className="flex-col items-start truncate group-[[data-state=collapsed]]:hidden">
-                  <span className="block text-sm font-medium text-foreground truncate"> {/* Use block for new line */}
-                    {user.displayName || "Utilisateur"}
-                  </span>
-                  <span className="block text-xs text-muted-foreground truncate"> {/* Use block for new line */}
-                    {user.email || "email non disponible"}
-                  </span>
-                </div>
-                </div>
-              
-            )}
-            <SidebarMenuButton 
+            <div 
+                            className={cn(
+                                "flex w-full items-center gap-2 rounded-md p-2 text-left text-sm", // Base classes like SidebarMenuButton
+                                "group-[[data-state=collapsed]]:justify-center group-[[data-state=collapsed]]:p-0 group-[[data-state=collapsed]]:aspect-square group-[[data-state=collapsed]]:w-[calc(var(--sidebar-width-icon)-theme(spacing.4))]" // Match collapsed size roughly
+                            )}
+                            // The p-2 for expanded comes from SidebarMenuButton default padding
+                            // For collapsed, aspect-square and a calculated width to hold just the avatar can work
+                          >
+                            <Avatar className={cn(
+                                "h-9 w-9 border",
+                                "group-[[data-state=collapsed]]:h-8 group-[[data-state=collapsed]]:w-8" // Avatar size when collapsed
+                            )}>
+                              <AvatarImage src={user.profilePicture} alt={user.displayName || 'Avatar'} />
+                              <AvatarFallback>
+                                {user.displayName ? user.displayName.substring(0, 1).toUpperCase() : <UserCircle size={20}/>}
+                              </AvatarFallback>
+                            </Avatar>
+                            {/* Text part - already hidden correctly when collapsed */}
+                            <div className="flex-col items-start truncate group-[[data-state=collapsed]]:hidden">
+                              <span className="text-sm font-medium text-foreground truncate block"> {/* Added block */}
+                                {user.displayName || "Utilisateur"}
+                              </span>
+                              <span className="text-xs text-muted-foreground truncate block"> {/* Added block */}
+                                {user.email || ""}
+                              </span>
+                            </div>
+                          </div>
+                          )}
+           <SidebarMenuButton 
                 onClick={handleLogout} 
                 tooltip="Déconnexion" 
-                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 group-[[data-state=collapsed]]:justify-center"
                 // ShadCN destructive button style more closely
             >
               <LogOut className="size-5 shrink-0 group-[[data-state=collapsed]]:mr-0 mr-2.5" />

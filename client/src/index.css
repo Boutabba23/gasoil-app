@@ -137,6 +137,10 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --custom: oklch(0.96 0.1382 105.63);
+  --sidebar-width: 16rem; /* Default expanded width */
+  --sidebar-width-icon: 4.5rem; /* NEW, LARGER COLLAPSED WIDTH (e.g., 72px) - CHOOSE YOUR SIZE */
+
+
 }
 
 .dark {

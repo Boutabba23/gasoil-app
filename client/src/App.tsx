@@ -5,7 +5,7 @@ import ProtectedRoute from './components/protectedRoute';
 import { AuthProvider } from './contexts/AuthContext'; // Or from './hooks/useAuth'
 import DashboardLayout from './components/layout/DashboardLayout';
 import ConversionPage from './pages/ConversionPage'; // Should point to the file in src/pages/
-import HistoriquePage from '@/components/HistoryTable';
+import HistoriquePage from '@/pages/HistoriquePage';
 
 function App() {
   console.log("App.tsx: Rendering. AuthProvider will wrap Routes.");

@@ -1,89 +1,165 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter
-} from '@/components/ui/card';
-import ConversionForm from '../components/ConversionForm';
+// client/src/pages/ConversionPage.tsx
+import React, { useState, useEffect, useMemo } from 'react'; // Added useMemo
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import ConversionForm  from '../components/ConversionForm'; // Import type
 import { Progress } from "@/components/ui/progress";
 import { Lightbulb } from 'lucide-react';
-// import api from '../lib/api'; // If you need to fetch initial data
+import { cn } from "@/lib/utils";
+import api from '../lib/api'; // Assuming you might want to fetch initial state
 
 const ConversionPage: React.FC = () => {
   const [currentLitres, setCurrentLitres] = useState<number | null>(null);
-  const [lastCmValue, setLastCmValue] = useState<number | null>(null); 
+  const [lastCmValue, setLastCmValue] = useState<number | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true); // For initial data fetch
   const MAX_LITRES = 50000;
 
-  useEffect(() => {
-    // Optional: Fetch latest level on mount
-  }, []);
+  // Function to get color classes based on percentage
+  const getLevelColorClasses = (percentage: number): { textCls: string; progressCls: string } => {
+    // Ensure percentage is a valid number, default to 0 if not
+    const p = (typeof percentage === 'number' && !isNaN(percentage)) ? percentage : 0;
 
-  const handleConversionSuccess = (data: { litres: number; cm: number }) => {
-    setCurrentLitres(data.litres);
-    setLastCmValue(data.cm);
+    if (p <= 10) return { textCls: "text-red-600 dark:text-red-400", progressCls: "[&>*]:bg-red-600 dark:[&>*]:bg-red-500" };
+    if (p <= 30) return { textCls: "text-orange-500 dark:text-orange-400", progressCls: "[&>*]:bg-orange-500 dark:[&>*]:bg-orange-400" };
+    if (p <= 70) return { textCls: "text-yellow-500 dark:text-yellow-400", progressCls: "[&>*]:bg-yellow-500 dark:[&>*]:bg-yellow-400" };
+    if (p <= 90) return { textCls: "text-lime-600 dark:text-lime-400", progressCls: "[&>*]:bg-lime-600 dark:[&>*]:bg-lime-500" };
+    return { textCls: "text-green-600 dark:text-green-400", progressCls: "[&>*]:bg-green-600 dark:[&>*]:bg-green-500" };
   };
 
-  const progressValue = currentLitres !== null ? Math.min(100, Math.max(0, (currentLitres / MAX_LITRES) * 100)) : null;
+  // Callback from ConversionForm
+  const handleConversionSuccess = (data: ConversionSuccessData) => {
+    console.log("ConversionPage: handleConversionSuccess CALLED with data:", data);
+    if (typeof data.litres === 'number' && typeof data.cm === 'number') {
+      setCurrentLitres(data.litres);
+      setLastCmValue(data.cm);
+    } else {
+      console.error("ConversionPage: Invalid data from ConversionForm:", data);
+      // Potentially reset to a "data error" state if necessary
+      setCurrentLitres(null); 
+      setLastCmValue(null);
+    }
+  };
+  
+  // Memoize progress calculation and color determination
+  const { progressValue, levelColor } = useMemo(() => {
+    const isValidLitres = currentLitres !== null && typeof currentLitres === 'number' && !isNaN(currentLitres);
+    const calculatedProgress = isValidLitres
+      ? Math.min(100, Math.max(0, (currentLitres / MAX_LITRES) * 100))
+      : 0;
+    const colors = getLevelColorClasses(calculatedProgress);
+    return { progressValue: calculatedProgress, levelColor: colors };
+  }, [currentLitres]); // MAX_LITRES is constant
+
+  // Effect for fetching initial data on mount
+  useEffect(() => {
+    const fetchLatestLevel = async () => {
+      setIsInitialLoading(true);
+      try {
+        console.log("ConversionPage: Fetching latest conversion details from API.");
+        const response = await api.get<{ volume_l: number; value_cm: number }>(
+          '/data/history?page=1&limit=1' // Assuming history is sorted by newest
+        ); 
+        // Adjust endpoint if you have a dedicated one for "latest"
+        if (response.data && response.data.data && response.data.data.length > 0) {
+          const latestEntry = response.data.data[0];
+           if (typeof latestEntry.volume_l === 'number' && typeof latestEntry.value_cm === 'number') {
+             setCurrentLitres(latestEntry.volume_l);
+             setLastCmValue(latestEntry.value_cm);
+             console.log("ConversionPage: Initial level set from API:", latestEntry);
+           } else {
+             console.warn("ConversionPage: Latest API data has invalid types.");
+           }
+        } else {
+           console.log("ConversionPage: No initial conversion data found from API.");
+           // setCurrentLitres(null) & setLastCmValue(null) are already default
+        }
+      } catch (error) {
+        console.error("ConversionPage: Failed to fetch latest tank level on mount:", error);
+        // setCurrentLitres(null); // Already null initially
+        // setLastCmValue(null);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    fetchLatestLevel();
+  }, []); // Empty dependency array: runs only on mount
+
 
   return (
-    // Corrected: max-w-none to allow full width within its container from DashboardLayout
-    // mx-auto is removed as it's not needed if there's no max-width other than full.
-    // space-y-8 for vertical spacing. p-1 can be kept or handled by DashboardLayout's main padding.
-    <div className=" w-fit  space-y-8 "> 
-      
-      <h1 className="text-3xl font-bold text-foreground dark:text-slate-100">
-        Conversion de Jauge
-      </h1>
-       <div className="flex  gap-8 max-w-none w-full">
-      <Card className="w-full bloc">
-        <CardHeader>
-          <CardTitle className="text-xl">Nouvelle Mesure de Jauge</CardTitle>
-          <CardDescription>
-            Entrez la valeur de la jauge pour calculer le volume et enregistrer.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ConversionForm 
-            onConversionSuccess={handleConversionSuccess} 
-          />
-        </CardContent>
-        <CardFooter className="text-xs text-muted-foreground border-t pt-4">
-            <Lightbulb className="mr-2 h-4 w-4 text-yellow-500 shrink-0" />
-            <span>Assurez-vous que la jauge est propre et insérée verticalement pour une mesure précise.</span>
-        </CardFooter>
-      </Card>
-
-      <Card className="w-full">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> 
+        <Card className="w-full">
           <CardHeader>
-              <CardTitle className="text-xl">Niveau Citerne Actuel</CardTitle>
-              {lastCmValue !== null && (
-                <CardDescription>Basé sur la dernière mesure : {lastCmValue.toFixed(1)} cm</CardDescription>
-              )}
+            <CardTitle>Nouvelle Mesure de Jauge</CardTitle>
+            <CardDescription>
+              Entrez la valeur de la jauge (0-300 cm) pour calculer le volume et enregistrer une nouvelle mesure.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center space-y-4 pt-2 min-h-[150px]">
-              {progressValue !== null && currentLitres !== null ? (
-                  <>
-                      <div className="text-4xl font-bold text-primary text-center">
-                        {currentLitres.toLocaleString()} 
-                        <span className="text-2xl font-normal text-muted-foreground ml-1">L</span>
-                      </div>
-                      <Progress value={progressValue} aria-label={`${progressValue.toFixed(0)}% plein`} className="w-full h-3 [&>*]:bg-primary" />
-                      <div className="w-full flex justify-between text-sm text-muted-foreground">
-                          <span>0 L</span>
-                          <span className="font-semibold">{progressValue.toFixed(0)}%</span>
-                          <span>{MAX_LITRES.toLocaleString()} L</span>
-                      </div>
-                  </>
-              ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <p>Effectuez une conversion pour voir le niveau.</p>
-                  </div>
-              )}
+          <CardContent className="space-y-4">
+            <ConversionForm onConversionSuccess={handleConversionSuccess} />
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md text-sm text-blue-700 dark:text-blue-300 flex items-start">
+                <Lightbulb className="h-5 w-5 mr-3 mt-0.5 shrink-0 text-blue-500" />
+                <p>
+                  Pour une lecture précise, assurez-vous que la jauge est propre et maintenue verticalement.
+                </p>
+            </div>
           </CardContent>
-          <CardFooter className="text-xs text-muted-foreground text-center justify-center border-t pt-4">
-              Le niveau est mis à jour après chaque nouvelle mesure valide.
-          </CardFooter>
-      </Card>
-    </div>
+        </Card>
+
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle>Niveau Citerne Actuel</CardTitle>
+                {isInitialLoading && (
+                    <CardDescription>Chargement du dernier niveau...</CardDescription>
+                )}
+                {!isInitialLoading && lastCmValue !== null && (
+                  <CardDescription>
+                    Basé sur la dernière mesure : {lastCmValue.toLocaleString(undefined, {minimumFractionDigits:1, maximumFractionDigits:1})} cm
+                  </CardDescription>
+                )}
+                 {!isInitialLoading && currentLitres === null && ( // Show if not loading AND no data
+                  <CardDescription>Effectuez une conversion pour afficher le niveau.</CardDescription>
+                 )}
+            </CardHeader>
+            <CardContent className="space-y-4 pt-2 min-h-[200px] h-full flex flex-col justify-center items-center"> {/* Added min-h */}
+                {isInitialLoading ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                        <p>Chargement...</p> {/* Or use a ShadCN Skeleton */}
+                    </div>
+                ) : currentLitres !== null ? ( // Check currentLitres is not null
+                    <>
+                        <p className={cn(
+                            "text-4xl sm:text-5xl font-bold tracking-tight my-2",
+                            levelColor.textCls
+                        )}>
+                            {currentLitres.toLocaleString()} L
+                        </p>
+                        <Progress 
+                            value={progressValue} 
+                            className={cn("w-full h-4 rounded-full", levelColor.progressCls)} 
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground w-full mt-1">
+                            <span>0 L</span>
+                            <span className={cn("font-medium", levelColor.textCls)}> 
+                                {progressValue.toFixed(0)}%
+                            </span>
+                            <span>{MAX_LITRES.toLocaleString()} L</span>
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                       <p className="mb-2">Le niveau sera affiché après une mesure valide.</p>
+                    </div>
+                )}
+                 {!isInitialLoading && ( // Only show this tip once loading is done
+                    <p className="text-xs text-muted-foreground mt-auto pt-4 text-center">
+                        Le niveau est mis à jour après chaque nouvelle mesure valide.
+                    </p>
+                 )}
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
+
 export default ConversionPage;

@@ -51,33 +51,73 @@ export const convertCmToLitres = async (req: Request, res: Response): Promise<vo
 };
 
 // --- Get Conversion History ---
-export const getConversionHistory = async (req: Request, res: Response): Promise<void> => {
-  const userFromRequest = req.user as IUser | undefined;
-  const userId = userFromRequest?.googleId;
+export const getConversionHistory = async (req: Request, res: Response):Promise<void> => {
+   const currentUser = req.user as IUser | undefined;
+  const userId = currentUser?.googleId;
+
+  if (!userId) {
+    res.status(401).json({ message: "Utilisateur non authentifié." });
+    return;
+  }
+
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
-  const query: any = { userId };
 
-  // Add search and date filtering (simplified for brevity, use your full logic)
+  const query: mongoose.FilterQuery<typeof Conversion> = { userId };
+
+  // Search Term Filter (existing logic)
   if (req.query.search) {
     const searchTerm = req.query.search as string;
     const searchNumber = parseFloat(searchTerm);
     if (!isNaN(searchNumber)) {
-      query.$or = [{ value_cm: searchNumber }, { volume_l: searchNumber }];
+      query.$or = [
+        { value_cm: searchNumber },
+        { volume_l: searchNumber }
+      ];
     }
   }
-  if (req.query.from && req.query.to) {
-    query.createdAt = { $gte: new Date(req.query.from as string), $lte: new Date(req.query.to as string) };
-  } else if (req.query.from) {
-    query.createdAt = { $gte: new Date(req.query.from as string) };
-  } else if (req.query.to) {
-    query.createdAt = { $lte: new Date(req.query.to as string) };
-  }
 
-  try {
-    const conversions = await Conversion.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
+ // --- ADDED/MODIFIED DATE RANGE FILTER LOGIC ---
+  const fromDateString = req.query.from as string | undefined;
+  const toDateString = req.query.to as string | undefined;
+
+  if (fromDateString || toDateString) {
+    query.createdAt = {}; 
+    if (fromDateString) {
+      const dateFrom = new Date(fromDateString);
+      dateFrom.setUTCHours(0, 0, 0, 0); 
+      if (!isNaN(dateFrom.getTime())) {
+        query.createdAt.$gte = dateFrom;
+        console.log("Filtering from date (backend):", dateFrom.toISOString());
+      } else {
+        console.warn("Invalid 'from' date received:", fromDateString);
+      }
+    }
+    if (toDateString) {
+      const dateTo = new Date(toDateString);
+      dateTo.setUTCHours(23, 59, 59, 999); 
+      if (!isNaN(dateTo.getTime())) {
+        query.createdAt.$lte = dateTo;
+        console.log("Filtering to date (backend):", dateTo.toISOString());
+      } else {
+        console.warn("Invalid 'to' date received:", toDateString);
+      }
+    }
+    if (Object.keys(query.createdAt).length === 0) {
+        delete query.createdAt;
+    }
+  }
+  console.log("Executing history query (backend):", JSON.stringify(query));
+   try {
+    const conversions = await Conversion.find(query)
+      // ... (rest of the find, sort, skip, limit logic) ...
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
     const totalConversions = await Conversion.countDocuments(query);
+
     res.status(200).json({
       data: conversions,
       currentPage: page,
@@ -85,16 +125,22 @@ export const getConversionHistory = async (req: Request, res: Response): Promise
       totalItems: totalConversions,
     });
   } catch (error: any) {
-    console.error('Error fetching history:', error);
-    res.status(500).json({ message: 'Erreur serveur lors de la récupération de l\'historique.', error: error.message });
+    // ... (error handling) ...
   }
 };
+
+
 
 // --- Delete Conversion Entry ---
 export const deleteConversionEntry = async (req: Request, res: Response): Promise<void> => {
   const userFromRequest = req.user as IUser | undefined;
   const userId = userFromRequest?.googleId;
   const entryId = req.params.id;
+
+  if (!userId) { // Check if user is authenticated (protect middleware should ensure this though)
+    res.status(401).json({ message: 'Utilisateur non authentifié pour la suppression.' });
+    return;
+  }
 
   if (!mongoose.Types.ObjectId.isValid(entryId)) {
     res.status(400).json({ message: 'ID de l\'entrée de conversion invalide.' });
