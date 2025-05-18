@@ -75,7 +75,7 @@ const HistoriquePage: React.FC = () => {
                   value={inputSearchTerm}
                   onChange={(e) => setInputSearchTerm(e.target.value)}
                   onKeyDown={handleSearchKeyPress} // Changed from onKeyPress to onKeyDown for better Enter key handling
-                  className="pl-8 w-full"
+                  className="pl-8 h-10 w-full"
                 />
               </div>
             </div>
@@ -129,10 +129,10 @@ const HistoriquePage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 md:col-span-1 md:self-end"> {/* md:self-end to align with input bottom */}
-                <Button onClick={handleApplyFilters} className="w-full bg-[#FE5D26] hover:bg-[#ff8367] sm:w-auto flex-1">
+                <Button onClick={handleApplyFilters} className="w-full bg-[#FE5D26] h-10 hover:bg-[#ff8367] sm:w-auto flex-1">
                     <Search className="mr-2 h-4 w-4" /> Appliquer
                 </Button>
-                <Button onClick={handleResetFilters} variant="outline" className="w-full text-[#FE5D26] sm:w-auto flex-1">
+                <Button onClick={handleResetFilters} variant="outline" className="w-full h-10 text-[#FE5D26] sm:w-auto flex-1">
                     <RotateCcw className="mr-2 h-4 w-4" /> Réinitialiser
                 </Button>
             </div>
