@@ -102,7 +102,7 @@ const HomePage: React.FC = () => {
         max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:py-3 max-sm:bg-white/20 max-sm:dark:bg-black/30 max-sm:backdrop-blur-sm max-sm:z-10 /* Fixed on max-sm */
        "
       >
-                © {new Date().getFullYear()} VotreNomDeSociete. Tous droits réservés.
+                © {new Date().getFullYear()} Boutaaba Larab. Tous droits réservés.
 
       </motion.footer>
     </div>
