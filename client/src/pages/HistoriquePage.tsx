@@ -47,7 +47,7 @@ const HistoriquePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className=" top-0 z-10 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div className=" flex flex-col sm:flex-row justify-between items-center gap-2">
         {/* Title is now primarily in DashboardLayout's header, can be removed or kept as sub-header */}
         {/* <h1 className="text-2xl font-semibold text-foreground sm:text-3xl dark:text-slate-100">
           Historique des Mesures
