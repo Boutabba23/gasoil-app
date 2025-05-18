@@ -1,50 +1,36 @@
-// src/routes/authRoutes.ts
 import express from 'express';
-import passport from 'passport';
+import passport from '../config/passport';
 import { googleCallback, getMe, logout } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// Initial redirect to Google
 router.get(
   '/google',
-  (req, res, next) => { // Optional: Middleware to dynamically add prompt
+  (req, res, next) => {
     const authOptions: passport.AuthenticateOptions = {
       scope: ['profile', 'email'],
-      session: false, // If not using express-session with Passport for this strategy
+      session: false, 
     };
-
-    // Check if the frontend sent a prompt preference
-    // This makes the frontend the primary controller of the prompt.
     if (req.query.prompt) {
-      authOptions.prompt = req.query.prompt as string; // 'select_account' or 'consent' etc.
+      authOptions.prompt = req.query.prompt as string;
     } else {
-      // If frontend doesn't send it, you can default it here (less flexible)
-      authOptions.prompt = 'select_account'; 
+      authOptions.prompt = 'select_account';
     }
-    
-    console.log("Backend /google route: Authenticating with options:", authOptions);
     passport.authenticate('google', authOptions)(req, res, next);
   }
 );
 
-// Callback from Google
 router.get(
   '/google/callback',
   passport.authenticate('google', {
-    // failureRedirect is where Google redirects if IT finds an error with your request,
-    // or if the user denies access on Google's consent screen.
-    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5174'}/login?error=google_auth_failed`,
-    session: false, // Crucial if you're managing state with JWTs and not server sessions
+    failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=google_auth_failed`,
+    session: false,
   }),
-  googleCallback // Your controller to handle user creation/login and JWT generation
+  googleCallback
 );
 
-// Get current authenticated user's info
 router.get('/me', protect, getMe);
+router.post('/logout', protect, logout);
 
-// Logout (primarily a client-side token clearing action)
-router.post('/logout', protect, logout); // POST is conventional, can be GET
-
-export default router;
+export default router; // <<< ENSURE THIS LINE IS EXACTLY LIKE THIS

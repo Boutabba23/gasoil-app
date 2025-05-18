@@ -1,5 +1,4 @@
 // server/src/scripts/seedConversionTable.ts
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 // Adjust paths if your file structure for config/db and models is different
 import connectDB from '../config/db';

@@ -1,19 +1,20 @@
 // server/src/types/express/index.d.ts
-import { IUser } from '../../models/User'; // Adjust path to your IUser interface
+
+// Ensure this path is correct relative to this index.d.ts file
+// From: server/src/types/express/index.d.ts
+// To:   server/src/models/User.ts
+import { IUser } from '../../models/User';
 
 declare global {
   namespace Express {
-    export interface User extends IUser {} // Or simply export interface User extends IUser {} without the export if it's not recognized as a global augmentation
+    // Augment the User interface
+    // This makes Express.User have the same shape as your IUser
+    // which means types from @types/passport for Express.User will now include your fields.
+    export interface User extends IUser {}
+
+    // Augment the Request interface
     export interface Request {
-      user?: User; // Now req.user will be typed as your IUser
+      user?: User; // This now means req.user is of type (IUser properties) | undefined
     }
   }
 }
-
-// You might also see a slightly different augmentation structure in some examples:
-// declare namespace Express {
-//   export interface Request {
-//     user?: IUser; // Or whatever your user type is
-//   }
-// }
-// The key is to tell TypeScript what `Express.Request.user` should be.

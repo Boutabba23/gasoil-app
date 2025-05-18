@@ -1,21 +1,31 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "module": "CommonJS", // This is a common setting for Node.js projects
+    "esModuleInterop": true, // **CRUCIAL FOR THE DEFAULT IMPORT TO WORK SMOOTHLY**
+    "allowSyntheticDefaultImports": true, // Often good to have with esModuleInterop
+    "target": "ES2020",
     "strict": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "baseUrl": "./src", // Example: if you use this for cleaner paths
+    "paths": { // Example: if you use this
+      "@/*": ["*"] 
+    },
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "sourceMap": true, // Utile pour le débogage
-    "baseUrl": "./", // Permet les chemins relatifs depuis la racine (ex: 'src/models/User')
-    "paths": {
-      "@/*": ["src/*"] // Exemple d'alias de chemin si besoin
-    }
+    "forceConsistentCasingInFileNames": true
+    // If you had "typeRoots", ensure it's correct or consider removing it to let TS auto-discover
+    // "typeRoots": [
+    //   "./node_modules/@types",
+    //   "./src/types" 
+    // ],
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts", "dist"]
+  "include": [
+    "src/**/*" // This makes sure all .ts files in src are compiled
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

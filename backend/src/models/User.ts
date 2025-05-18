@@ -1,37 +1,21 @@
-// src/models/User.ts
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IUser extends Document {
+export interface IUser extends Document { // Document provides _id, and with timestamps: true, also createdAt/updatedAt
   googleId: string;
   displayName: string;
   email?: string;
   profilePicture?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  // No need to explicitly declare createdAt/updatedAt if using { timestamps: true }
 }
 
-const UserSchema: Schema = new Schema(
+const UserSchema: Schema<IUser> = new Schema( // Typed Schema
   {
-    googleId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    displayName: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      sparse: true, // Allows null/undefined and ensures uniqueness if present
-    },
-    profilePicture: {
-      type: String,
-    },
+    googleId: { type: String, required: true, unique: true },
+    displayName: { type: String, required: true },
+    email: { type: String, unique: true, sparse: true }, // sparse if optional but unique when present
+    profilePicture: { type: String },
   },
-  {
-    timestamps: true, // Automatically adds createdAt and updatedAt
-  }
+  { timestamps: true } // This adds createdAt and updatedAt fields managed by Mongoose
 );
 
 export default mongoose.model<IUser>('User', UserSchema);

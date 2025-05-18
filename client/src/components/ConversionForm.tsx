@@ -12,9 +12,10 @@ const destructiveSonnerToastClasses = "bg-red-50 border-red-400 text-red-800 dar
 const infoSonnerToastClasses = "bg-blue-50 border-blue-400 text-blue-800 dark:bg-blue-900/60 dark:border-blue-700 dark:text-blue-200 rounded-lg shadow-md p-4";
 
 interface ConversionFormProps {
-  // Ensure the prop is correctly typed to expect a function
-  onConversionSuccess: (convertedLitres: number) => void; 
+  // UPDATED: Expect an object with litres and cm
+  onConversionSuccess: (data: { litres: number; cm: number }) => void; 
 }
+
 
 const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) => {
   const [cmValue, setCmValue] = useState<string>('');
@@ -54,7 +55,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
       // Log before calling for 0 cm case as well
       console.log("ConversionForm: [0 cm case] Type of onConversionSuccess:", typeof onConversionSuccess);
       if (typeof onConversionSuccess === 'function') {
-        onConversionSuccess(0); 
+        onConversionSuccess({ litres: 0, cm: 0 }); 
       } else {
         console.error("ConversionForm: [0 cm case] onConversionSuccess prop is NOT a function! Value:", onConversionSuccess);
       }
@@ -81,7 +82,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
       console.log("ConversionForm: Type of onConversionSuccess:", typeof onConversionSuccess);
       console.log("ConversionForm: Is onConversionSuccess a function?", onConversionSuccess instanceof Function);
       if (typeof onConversionSuccess === 'function') {
-        onConversionSuccess(response.data.volume_l); // Call the prop function
+        onConversionSuccess({ litres: response.data.volume_l, cm: numericCmValue }); // Call the prop function
         console.log("ConversionForm: onConversionSuccess called successfully.");
       } else {
         console.error("ConversionForm: onConversionSuccess prop is NOT a function! Value:", onConversionSuccess);

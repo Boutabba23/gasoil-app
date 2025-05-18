@@ -1,47 +1,61 @@
-// src/middleware/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User, { IUser } from '../models/User'; // Adjust path if needed
+import User from '../models/User'; // Mongoose User model
+import type { IUser } from '../models/User'; // IUser type interface
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  console.error('FATAL ERROR: JWT_SECRET is not defined.');
-  process.exit(1);
+interface DecodedToken {
+  googleId: string;
+  id: string; // This should be the MongoDB _id of the User
+  iat: number;
+  exp: number;
 }
 
-// Extend Express Request type to include 'user'
-export interface AuthenticatedRequest extends Request {
-  user?: IUser; // Or the specific type of your decoded token payload
-}
+export const protect = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  let token: string | undefined;
+  // console.log("Protect middleware: Auth header:", req.headers.authorization); // Debug log
 
-export const protect = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void | Response> => {
-  let token;
-
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     try {
       token = req.headers.authorization.split(' ')[1];
 
-      // Verify token
-      const decoded: any = jwt.verify(token, JWT_SECRET); // Consider defining a type for 'decoded'
-
-      // Get user from the token (assuming googleId is stored in JWT)
-      // If you store the MongoDB _id in JWT, query by _id
-      const userFromDb: IUser | null = await User.findOne({ googleId: decoded.googleId }).select('-__v');
-
-      if (!userFromDb) {
-        return res.status(401).json({ message: 'Not authorized, user not found' });
+      if (!process.env.JWT_SECRET) {
+        console.error("Protect middleware: JWT_SECRET is not defined!");
+        res.status(500).json({ message: 'Erreur de configuration serveur.' });
+        return; 
       }
 
-      req.user = userFromDb; // Attach user to the request object
+      const decoded = jwt.verify(token, process.env.JWT_SECRET) as DecodedToken;
+      // console.log("Protect middleware: Token decoded:", decoded);
+
+      const userFromDb = await User.findById(decoded.id).select('-__v');
+
+      if (!userFromDb) {
+        console.log("Protect middleware: User not found in DB for token ID:", decoded.id);
+        res.status(401).json({ message: 'Non autorisé, utilisateur non trouvé.' });
+        return;
+      }
+      
+      // console.log("Protect middleware: User found:", userFromDb.displayName);
+      // Assign the Mongoose document to req.user. 
+      // Downstream will cast it to IUser.
+      req.user = userFromDb; // TypeScript implicitly knows userFromDb is IUser compatible
       next();
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return res.status(401).json({ message: 'Not authorized, token failed' });
+      return; 
+    } catch (error: any) {
+      console.error("Protect middleware: Token error:", error.name, error.message);
+      let message = 'Non autorisé, token invalide ou expiré.';
+      if (error.name === 'TokenExpiredError') message = 'Session expirée, veuillez vous reconnecter.';
+      else if (error.name === 'JsonWebTokenError') message = 'Token malformé ou invalide.';
+      res.status(401).json({ message });
+      return; 
     }
   }
-
-  if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });
+  
+  // If token was never extracted from header (e.g., no auth header or wrong format)
+  // This ensures we always send a response or call next()
+  if (!token) { 
+    console.log("Protect middleware: No Bearer token found in Authorization header.");
+    res.status(401).json({ message: 'Non autorisé, pas de token fourni ou format incorrect.' });
+    return;
   }
 };

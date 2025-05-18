@@ -1,17 +1,17 @@
 import express from 'express';
-// 👇 Ensure deleteConversionEntry is imported
-import { convertCmToLitres, getConversionHistory, deleteConversionEntry } from '../controllers/conversionController';
-import { protect } from '../middleware/authMiddleware';
+// 👇 Import controller functions from your controller file
+import { 
+    convertCmToLitres, 
+    getConversionHistory, 
+    deleteConversionEntry 
+} from '../controllers/conversionController'; // Correct path to controller
+import { protect } from '../middleware/authMiddleware'; // Your protect middleware
 
 const router = express.Router();
 
-// POST /api/data/convert
+// Define routes using the imported controller functions
 router.post('/convert', protect, convertCmToLitres);
-
-// GET /api/data/history
 router.get('/history', protect, getConversionHistory);
-
-// 👇 NEW: DELETE /api/data/history/:id
 router.delete('/history/:id', protect, deleteConversionEntry);
 
-export default router;
+export default router; // <<< THIS FILE EXPORTS THE ROUTER AS DEFAULT

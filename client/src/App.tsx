@@ -4,7 +4,7 @@ import AuthCallback from './components/AuthCallback';
 import ProtectedRoute from './components/protectedRoute';
 import { AuthProvider } from './contexts/AuthContext'; // Or from './hooks/useAuth'
 import DashboardLayout from './components/layout/DashboardLayout';
-import ConversionPage from '@/components/ConversionForm';
+import ConversionPage from './pages/ConversionPage'; // Should point to the file in src/pages/
 import HistoriquePage from '@/components/HistoryTable';
 
 function App() {

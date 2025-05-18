@@ -4,7 +4,7 @@
   "description": "Backend for Gasoil Management App",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "nodemon src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node src/scripts/seedConversionTable.ts",
@@ -23,7 +23,7 @@
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.14.3",
+    "mongoose": "^8.15.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
   },
