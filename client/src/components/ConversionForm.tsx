@@ -145,7 +145,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
         />
       </div>
 
-      <Button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#FE5D26] hover:bg-[#ff8367] focus:outline-none focus:ring-2 hover:cursor-pointer focus:ring-offset-2 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
+      <Button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-myprimary hover:bg-mysecondary focus:outline-none focus:ring-2 hover:cursor-pointer focus:ring-offset-2 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
         {isLoading ? (
           <>
             <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
@@ -157,7 +157,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
       </Button>
 
       {!isLoading && inlineError && (
-        <Alert variant="destructive" className="mt-4 bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700">
+        <Alert variant="destructive" className="mt-4 bg-red-50 dark:bg-red-900/30  border-red-300 dark:border-red-700">
             <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
             <AlertTitle className="font-semibold text-red-700 dark:text-red-300">Erreur</AlertTitle>
             <AlertDescription className="text-red-600 dark:text-red-400">{inlineError}</AlertDescription>

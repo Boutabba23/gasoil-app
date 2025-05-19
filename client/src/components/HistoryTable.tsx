@@ -36,6 +36,9 @@ interface ConversionRecord {
   _id: string;
   value_cm: number;
   volume_l: number;
+  userEmail?: string; 
+     userName?: string; 
+
   createdAt: string;
 }
 
@@ -87,8 +90,10 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ searchTerm, dateRange }) =>
       if (dateRange?.to) {
         params.append('to', format(dateRange.to, 'yyyy-MM-dd'));
       }
-      
+       const apiUrl = `/data/history?${params.toString()}`;
+      console.log("HistoryTable: Calling API:", apiUrl);
       const response = await api.get<PaginatedResponse>(`/data/history?${params.toString()}`);
+      console.log("HistoryTable: Fetched data items:", response.data.data.slice(0,2)); // Log first few items to check
       
       setHistory(response.data.data);
       setCurrentPage(response.data.currentPage);
@@ -99,11 +104,29 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ searchTerm, dateRange }) =>
         setCurrentPage(pageToFetch - 1); // This will re-trigger fetch due to useEffect dependency on currentPage
       }
     } catch (err: any) {
-      console.error("Error fetching history:", err.response?.data || err.message);
-      const errorMessage = err.response?.data?.message || "Erreur lors du chargement de l'historique.";
-      setError(errorMessage);
-      // Avoid redundant toasts if HistoriquePage also shows one for general fetch errors
-      // toast.error("Erreur Historique", { description: errorMessage, className: destructiveSonnerToastClasses });
+       console.error("HistoryTable: Error fetching history - raw error object:", err);
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("HistoryTable: Error response data:", err.response.data);
+        console.error("HistoryTable: Error response status:", err.response.status);
+        console.error("HistoryTable: Error response headers:", err.response.headers);
+        const errorMessage = err.response.data?.message || `Erreur serveur (${err.response.status})`;
+        setError(errorMessage);
+        toast.error("Erreur de Chargement de l'Historique", { description: errorMessage, className: destructiveSonnerToastClasses });
+      } else if (err.request) {
+        // The request was made but no response was received
+        console.error("HistoryTable: No response received for request:", err.request);
+        const errorMessage = "Impossible de joindre le serveur. Veuillez vérifier votre connexion.";
+        setError(errorMessage);
+        toast.error("Erreur Réseau", { description: errorMessage, className: destructiveSonnerToastClasses });
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("HistoryTable: Error setting up request:", err.message);
+        const errorMessage = `Erreur inattendue: ${err.message}`;
+        setError(errorMessage);
+        toast.error("Erreur Inattendue", { description: errorMessage, className: destructiveSonnerToastClasses });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -196,6 +219,8 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ searchTerm, dateRange }) =>
           <TableRow>
             <TableHead className="w-[150px]">Date</TableHead>
             <TableHead className="w-[120px]">Heure</TableHead>
+                         <TableHead className="w-[180px]">Utilisateur</TableHead> {/* 👇 NEW COLUMN */}
+
             <TableHead className="text-right w-[100px]">Jauge (cm)</TableHead>
             <TableHead className="text-right w-[120px]">Volume (L)</TableHead>
             <TableHead className="text-right w-[100px]">Actions</TableHead>
@@ -213,6 +238,20 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ searchTerm, dateRange }) =>
             <TableRow key={record._id}>
               <TableCell>{format(new Date(record.createdAt), 'dd/MM/yyyy', { locale: fr })}</TableCell>
               <TableCell>{format(new Date(record.createdAt), 'HH:mm:ss', { locale: fr })}</TableCell>
+               <TableCell className="text-xs">
+                 {record.userName && record.userName !== 'Utilisateur Inconnu' ? (
+                     <>
+                         <div className="font-medium">{record.userName}</div>
+                         {record.userEmail && record.userEmail !== 'N/A' && (
+                             <div className="text-muted-foreground">{record.userEmail}</div>
+                         )}
+                     </>
+                 ) : record.userEmail && record.userEmail !== 'N/A' ? (
+                     record.userEmail
+                 ) : (
+                     <span className="italic text-muted-foreground">Non disponible</span>
+                 )}
+               </TableCell>
               <TableCell className="text-right">{record.value_cm.toFixed(1)}</TableCell>
               <TableCell className="text-right">{record.volume_l.toFixed(2)}</TableCell>
               <TableCell className="text-right">

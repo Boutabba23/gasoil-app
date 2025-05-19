@@ -60,7 +60,7 @@ const DashboardLayout: React.FC = () => {
           collapsible="icon" // Sidebar collapses to icons
           // You can experiment with variant="inset" or "floating" for different looks
         >
-          <SidebarHeader className="h-[60px] border-b bg-[#fcf0b7] justify-center dark:border-slate-800 flex items-center px-3">
+          <SidebarHeader className=" h-[60px] border-b bg-[#fcf0b7] justify-center dark:border-slate-800 flex items-center px-3">
             <Link to="/dashboard/conversion" className="flex items-center gap-2.5 font-semibold whitespace-nowrap"> {/* Increased gap */}
               <div 
             className={`
@@ -152,7 +152,7 @@ const DashboardLayout: React.FC = () => {
         {/* Main Content Area */}
         <SidebarInset className="flex flex-col flex-1 overflow-y-auto bg-[#fffcf1] dark:bg-slate-900">
            {/* Header within the main content area */}
-           <header className="sticky top-0 z-20 flex h-[60px] items-center gap-3 border-b bg-[#fcf0b7] dark:border-slate-800 dark:bg-slate-900 px-4 sm:px-6 shrink-0">
+           <header className="fixed top-0 z-20 flex h-[60px] items-center gap-3 border-b bg-[#fcf0b7] dark:border-slate-800 dark:bg-slate-900 px-4 sm:px-6 shrink-0">
             <SidebarTrigger className="md:hidden text-foreground dark:text-slate-200 p-2 rounded-md hover:bg-muted"> {/* Mobile trigger */}
                 <MenuIcon className="size-5"/>
             </SidebarTrigger>

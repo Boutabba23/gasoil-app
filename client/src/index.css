@@ -8,6 +8,9 @@
     /* Couleurs ShadCN UI par défaut - personnalisez ici ou dans globals.css */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    --myprimary: oklch(0.6846 0.2063 37.64);
+    --mysecondary: oklch(0.7443 0.156958 33.9382);
+    --mylight : oklch(1 0.156958 33.9382);
     /* ... autres variables de ShadCN UI ... */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -94,6 +97,9 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
+  --color-myprimary: var(--myprimary);
+  --color-mysecondary: var(--mysecondary);
+  --color-mylight: var(--mylight);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
@@ -137,10 +143,10 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --custom: oklch(0.96 0.1382 105.63);
+  --myprimary: oklch(0.6846 0.2063 37.64);
+  --mysecondary: oklch(0.7443 0.156958 33.9382);
   --sidebar-width: 16rem; /* Default expanded width */
   --sidebar-width-icon: 4.5rem; /* NEW, LARGER COLLAPSED WIDTH (e.g., 72px) - CHOOSE YOUR SIZE */
-
-
 }
 
 .dark {

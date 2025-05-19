@@ -11,19 +11,9 @@ export interface IConversion extends Document {
 
 const ConversionSchema: Schema = new Schema(
   {
-    userId: {
-      type: String, // Google User ID, or: mongoose.Schema.Types.ObjectId, ref: 'User'
-      required: true,
-      index: true, // Index for faster queries by userId
-    },
-    value_cm: {
-      type: Number,
-      required: true,
-    },
-    volume_l: {
-      type: Number,
-      required: true,
-    },
+   userId: { type: String, required: true, index: true }, // Stores Google ID string
+  value_cm: { type: Number, required: true },
+  volume_l: { type: Number, required: true },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt
