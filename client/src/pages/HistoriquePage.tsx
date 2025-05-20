@@ -146,7 +146,7 @@ const HistoriquePage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 md:col-span-1 md:self-end">
+              <div className="flex sm:flex-row flex-col gap-2 md:col-span-1 md:self-end items-center">
                   <Button onClick={handleApplyFilters} className="w-full sm:w-auto h-10 hover:bg-mysecondary hover:cursor-pointer bg-myprimary flex-1">
                       <Search className="mr-2 h-4 w-4" /> Appliquer Filtres
                   </Button>

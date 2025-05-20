@@ -16,6 +16,8 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   SidebarInset,
+    useSidebar, // Import useSidebar to get collapsed state
+
 } from '@/components/ui/sidebar'; // The ShadCN generated Sidebar
 import {
   SlidersHorizontal, // Icon for Conversion
@@ -150,7 +152,7 @@ const DashboardLayout: React.FC = () => {
         </ShadcnAppSidebar>
 
         {/* Main Content Area */}
-        <SidebarInset className="flex flex-col flex-1 overflow-y-auto bg-[#fffcf1] dark:bg-slate-900">
+        <SidebarInset className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden bg-[#fffcf1] dark:bg-slate-900">
            {/* Header within the main content area */}
            <header className="fixed top-0 z-20 flex h-[60px] items-center gap-3 border-b bg-[#fcf0b7] dark:border-slate-800 dark:bg-slate-900 px-4 sm:px-6 shrink-0">
             <SidebarTrigger className="md:hidden text-foreground dark:text-slate-200 p-2 rounded-md hover:bg-muted"> {/* Mobile trigger */}
@@ -165,14 +167,71 @@ const DashboardLayout: React.FC = () => {
             {/* Future: Add more elements to header like global search, notifications, user dropdown if sidebar doesn't handle all */}
            </header>
            {/* Page content rendered by <Outlet /> */}
-          <main className="flex-1 p-4 py-6 sm:p-6 md:p-8">
+          <main className="flex-1 p-4 sm:px-6 sm:py-4 md:gap-8 overflow-auto pt-[60px] sm:pt-[calc(60px+theme(spacing.4))]">
             <Outlet />
           </main>
         </SidebarInset>
+                <DashboardLayoutContent navItems={navItems} />
+
       </div>
       <Toaster richColors position="bottom-right" expand={false} />
     </SidebarProvider>
   );
 };
+
+// New component to easily access useSidebar context
+const DashboardLayoutContent: React.FC<{ navItems: Array<{ href: string; label: string; icon: any }> }> = ({ navItems }) => {
+  const { state: sidebarState, isMobile } = useSidebar(); // Get 'expanded' or 'collapsed' state and isMobile
+  const location = useLocation();
+
+  // Determine the left offset for the fixed header
+  // These should match your --sidebar-width and --sidebar-width-icon from globals.css
+  const sidebarExpandedWidth = "16rem"; // 256px, should match --sidebar-width
+  const sidebarCollapsedWidth = "3rem"; // 48px, should match --sidebar-width-icon 
+                                         // If you changed --sidebar-width-icon to 4.5rem, use that here
+                                         // const sidebarCollapsedWidth = "4.5rem";
+
+  // On mobile, the sidebar is a sheet, so header has no left offset (left-0)
+  // On desktop, header's left position depends on sidebar state
+  const headerLeftOffset = isMobile 
+    ? "0px" 
+    : sidebarState === "expanded" 
+      ? sidebarExpandedWidth 
+      : sidebarCollapsedWidth;
+
+  return (
+      <header 
+        className={cn(
+          "fixed top-0 right-0 z-20 flex h-[60px] items-center gap-3 border-b",
+          "bg-[#fcf0b7] dark:border-slate-800 dark:bg-slate-900", // Your custom background
+          "px-4 sm:px-6 shrink-0 transition-all duration-200 ease-linear" // Added transition
+        )}
+        // 👇 Dynamically set the 'left' style and calculate 'width'
+        //    or use margin-left if your Sidebar component uses fixed positioning with a gap element
+        style={{ left: headerLeftOffset, width: `calc(100% - ${headerLeftOffset})` }}
+      >
+        <SidebarTrigger className={cn(
+            "text-foreground dark:text-slate-200",
+            isMobile ? "flex" : "md:hidden" // Show on mobile, hide on desktop if sidebar trigger is also for collapse
+        )}>
+          <MenuIcon className="size-5"/>
+        </SidebarTrigger>
+        
+        {/* Optional: Desktop collapse trigger if your sidebar collapsible="icon" and you want an explicit button */}
+        {!isMobile && (
+            <SidebarTrigger className="text-foreground dark:text-slate-200">
+                <MenuIcon className="size-5" /> {/* Or PanelLeftClose, PanelLeftOpen */}
+            </SidebarTrigger>
+        )}
+
+        <h1 className="text-xl font-semibold text-foreground dark:text-slate-100 grow">
+          {navItems.find(item => location.pathname.startsWith(item.href))?.label || "Tableau de bord"}
+        </h1>
+        {/* Other header elements */}
+      </header>
+
+      )
+};
+
 
 export default DashboardLayout;
