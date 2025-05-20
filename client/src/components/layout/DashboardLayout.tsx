@@ -187,7 +187,7 @@ const DashboardLayoutContent: React.FC<{ navItems: Array<{ href: string; label: 
   // Determine the left offset for the fixed header
   // These should match your --sidebar-width and --sidebar-width-icon from globals.css
   const sidebarExpandedWidth = "16rem"; // 256px, should match --sidebar-width
-  const sidebarCollapsedWidth = "3rem"; // 48px, should match --sidebar-width-icon 
+  const sidebarCollapsedWidth = "4rem"; // 48px, should match --sidebar-width-icon 
                                          // If you changed --sidebar-width-icon to 4.5rem, use that here
                                          // const sidebarCollapsedWidth = "4.5rem";
 
