@@ -85,13 +85,13 @@ const ConversionPage: React.FC = () => {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> 
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Nouvelle Mesure de Jauge</CardTitle>
-            <CardDescription>
-              Entrez la valeur de la jauge (0-300 cm) pour calculer le volume et enregistrer une nouvelle mesure.
+            <CardTitle className='text-2xl font-bold'>Nouvelle Mesure de Jauge</CardTitle>
+            <CardDescription className='mb-12'>
+              Entrez la valeur de la jauge (0-259 cm) pour calculer le volume et enregistrer une nouvelle mesure.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -107,12 +107,12 @@ const ConversionPage: React.FC = () => {
 
         <Card className="w-full">
             <CardHeader>
-                <CardTitle>Niveau Citerne Actuel</CardTitle>
+                <CardTitle className='text-2xl font-bold'>Niveau Citerne Actuel</CardTitle>
                 {isInitialLoading && (
                     <CardDescription>Chargement du dernier niveau...</CardDescription>
                 )}
                 {!isInitialLoading && lastCmValue !== null && (
-                  <CardDescription>
+                  <CardDescription className='mb-12'>
                     Basé sur la dernière mesure : {lastCmValue.toLocaleString(undefined, {minimumFractionDigits:1, maximumFractionDigits:1})} cm
                   </CardDescription>
                 )}

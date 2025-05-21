@@ -136,16 +136,18 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
             if (inlineError) setInlineError(null); 
             if (result) setResult(null);         
           }}
-          placeholder="Ex: 135"
+          placeholder="Entrer une valeur Entre 0 et 259 (cm), Exemple: 135"
           min="0"
-          max="300"
-          step="0.1"
-          className="mt-1 block w-full shadow-sm sm:text-sm rounded-md dark:bg-slate-700 dark:text-slate-50 dark:border-slate-600"
+          max="259"
+          maxLength={3}
+          step="1"
+          className="mt-1 block border-2 border-mylight w-full h-12 shadow-sm sm:text-sm rounded-md dark:bg-slate-700 dark:text-slate-50 dark:border-slate-600"
           required
         />
       </div>
+          <div className=' flex items-center justify-center mt-12'>
 
-      <Button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-myprimary hover:bg-mysecondary focus:outline-none focus:ring-2 hover:cursor-pointer focus:ring-offset-2 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
+      <Button type="submit" disabled={isLoading} className="w-[60%] flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-md font-medium text-white bg-myprimary hover:bg-mysecondary focus:outline-none focus:ring-2 hover:cursor-pointer focus:ring-offset-2 h-12 mb-16 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
         {isLoading ? (
           <>
             <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
@@ -155,6 +157,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({ onConversionSuccess }) 
           'Convertir en Litres'
         )}
       </Button>
+        </div>
 
       {!isLoading && inlineError && (
         <Alert variant="destructive" className="mt-4 bg-red-50 dark:bg-red-900/30  border-red-300 dark:border-red-700">

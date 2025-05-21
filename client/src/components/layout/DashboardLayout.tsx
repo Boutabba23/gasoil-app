@@ -95,8 +95,9 @@ const DashboardLayout: React.FC = () => {
                       tooltip={item.label}
                       size="default"
                       className={cn( // Custom active styles if needed beyond variant="secondary"
-                        isActive && "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground group-[[data-state=collapsed]]:justify-center"
-                      )}
+                        isActive && "bg-primary/10 text-primary dark:bg-primary/20 dark:text-myprimary group-[[data-state=collapsed]]:justify-center"
+                      )
+                     }
                     >
                       <Link to={item.href}> 
                         <IconComponent className="size-5 shrink-0 group-[[data-state=collapsed]]:mr-0 mr-2.5" /> {/* Slightly larger icon */}
