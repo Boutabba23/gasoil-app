@@ -14,7 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Search, RotateCcw } from "lucide-react";
+import { Calendar as CalendarIcon, Search } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   format,
@@ -152,24 +152,24 @@ const HistoriquePage: React.FC = () => {
     parseAndValidateDateInput,
   ]);
 
-  const handleResetFilters = useCallback(() => {
-    setInputSearchTerm("");
-    const newDefaultRange = createDefaultDateRange();
-    setInputFromDateString(
-      newDefaultRange.from
-        ? format(newDefaultRange.from, DISPLAY_DATE_FORMAT, { locale: fr })
-        : ""
-    );
-    setInputToDateString(
-      newDefaultRange.to
-        ? format(newDefaultRange.to, DISPLAY_DATE_FORMAT, { locale: fr })
-        : ""
-    );
-    setCalendarPickerRange(newDefaultRange);
-    setActiveSearchTerm("");
-    setActiveDateRange(newDefaultRange);
-    setIsDatePickerOpen(false);
-  }, []);
+  // const handleResetFilters = useCallback(() => {
+  //   setInputSearchTerm("");
+  //   const newDefaultRange = createDefaultDateRange();
+  //   setInputFromDateString(
+  //     newDefaultRange.from
+  //       ? format(newDefaultRange.from, DISPLAY_DATE_FORMAT, { locale: fr })
+  //       : ""
+  //   );
+  //   setInputToDateString(
+  //     newDefaultRange.to
+  //       ? format(newDefaultRange.to, DISPLAY_DATE_FORMAT, { locale: fr })
+  //       : ""
+  //   );
+  //   setCalendarPickerRange(newDefaultRange);
+  //   setActiveSearchTerm("");
+  //   setActiveDateRange(newDefaultRange);
+  //   setIsDatePickerOpen(false);
+  // }, []);
 
   const handleSearchKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>
@@ -306,29 +306,24 @@ const HistoriquePage: React.FC = () => {
                       }}
                     />
                     <div className="p-2 border-t border-border flex justify-end">
-                      <Button size="sm" onClick={handleApplyFilters}>
-                        Ok & Appliquer
+                      <Button className="bg-myprimary hover:cursor-pointer hover:bg-mysecondary" size="sm" onClick={handleApplyFilters}>
+                        Rechercher
                       </Button>
                     </div>
                   </PopoverContent>
                 </Popover>
               </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-1">
+                    <div className="  sm:flex-row gap-2 mt-4 pt-1">
               <Button
                 onClick={handleApplyFilters}
                 className="w-full sm:w-auto bg-myprimary hover:cursor-pointer hover:bg-mysecondary sm:flex-1 whitespace-nowrap"
               >
-                <Search className="mr-2 h-4 w-4" /> Appliquer Tous les Filtres
+                <Search className="mr-2 h-4 w-4" /> Rechercher
               </Button>
-              <Button
-                onClick={handleResetFilters}
-                variant="outline"
-                className="w-full sm:w-auto hover:bg-mysecondary hover:cursor-pointer sm:flex-1 whitespace-nowrap"
-              >
-                <RotateCcw className="mr-2 h-4 w-4" /> Réinitialiser
-              </Button>
+             
             </div>
+            </div>
+      
           </CardContent>
         </Card>
       </div>
