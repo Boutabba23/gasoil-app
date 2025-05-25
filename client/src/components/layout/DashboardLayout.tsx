@@ -23,11 +23,71 @@ import {
   SlidersHorizontal, // Icon for Conversion
   History,           // Icon for Historique
   LogOut,            // Icon for Logout
-               // Icon for App Logo
+            type LucideIcon,
+     // Icon for App Logo
   MenuIcon,           // Icon for Mobile Sidebar Trigger
   UserCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+interface NavItemType {
+  href: string;
+  label: string;
+  icon: LucideIcon; // Use the specific LucideIcon type
+}
+
+const dashboardNavItems: NavItemType[] = [
+    { href: '/dashboard/conversion', label: 'Conversion Jauge', icon: SlidersHorizontal },
+    { href: '/dashboard/historique', label: 'Historique', icon: History },
+  ];
+
+ const MobileAwareNavLink: React.FC<{
+  to: string;
+  label: string;
+  icon: LucideIcon;
+}> = ({ to, label, icon: IconComponent }) => {
+  const location = useLocation();
+  const { isMobile, setOpenMobile, state: sidebarState } = useSidebar(); // Get mobile state and setter
+
+  const isActive = location.pathname.startsWith(to);
+
+  const handleClick = () => {
+    if (isMobile) {
+      setOpenMobile(false); // Close mobile sidebar on click
+    }
+    // Navigation will happen via the Link component
+
+
+  };
+
+
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton 
+        asChild // Allows Link to take on Button styling and behavior
+        isActive={isActive} 
+        tooltip={label} // Shows when desktop sidebar is collapsed to icons
+        size="default"
+        className="group-[[data-state=collapsed]]:justify-center"
+        // We need to add onClick to the Link or have SidebarMenuButton pass it through.
+        // Since `asChild` is used, the `Link` gets the `onClick`.
+      >
+        <Link to={to} onClick={handleClick}> 
+          <IconComponent className="size-5 shrink-0" />
+          <span 
+            className={cn(
+                "truncate ml-2",
+                sidebarState === "collapsed" && !isMobile && "hidden" // More robust hiding for desktop collapsed
+            )}
+          >
+            {label}
+          </span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+};
+
 
 const DashboardLayout: React.FC = () => {
   
@@ -41,20 +101,18 @@ const DashboardLayout: React.FC = () => {
     navigate('/login'); // Redirect to login after logout
   };
 
-  const navItems = [
-    { href: '/dashboard/conversion', label: 'Conversion Jauge', icon: SlidersHorizontal },
-    { href: '/dashboard/historique', label: 'Historique', icon: History },
-    // Add more main navigation items for the dashboard here if needed
-  ];
+
+
+ 
+
 
   // Determine current page title for the header
   let currentPageTitle = "Tableau de Bord";
-  const activeNavItem = navItems.find(item => location.pathname.startsWith(item.href));
+  const activeNavItem = dashboardNavItems.find(item => location.pathname.startsWith(item.href));
   if (activeNavItem) {
     currentPageTitle = activeNavItem.label;
   }
-
-  return (
+  return(
     <SidebarProvider defaultOpen={true}> {/* Sidebar open by default on desktop */}
       <div className="flex min-h-screen w-full dark:bg-slate-950"> {/* Overall page background */}
         
@@ -84,29 +142,21 @@ const DashboardLayout: React.FC = () => {
 
           <SidebarContent className="p-2 flex-1 group-[[data-state=collapsed]]:grid group-[[data-state=collapsed]]:justify-center"> {/* flex-1 ensures it takes available space */}
             <SidebarMenu>
-              {navItems.map((item) => {
-                const IconComponent = item.icon;
-                const isActive = location.pathname.startsWith(item.href);
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={isActive} 
-                      tooltip={item.label}
-                      size="default"
-                      className={cn( // Custom active styles if needed beyond variant="secondary"
-                        isActive && "bg-primary/10 text-primary dark:bg-primary/20 dark:text-myprimary group-[[data-state=collapsed]]:justify-center"
-                      )
-                     }
-                    >
-                      <Link to={item.href}> 
-                        <IconComponent className="size-5 shrink-0 group-[[data-state=collapsed]]:mr-0 mr-2.5" /> {/* Slightly larger icon */}
-                        <span className="truncate group-[[data-state=collapsed]]:hidden">{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+             
+              {dashboardNavItems.map((item) => (
+             
+               
+                <MobileAwareNavLink
+                  key={item.href}
+                  to={item.href}
+                  label={item.label}
+                  
+                  icon={item.icon}
+                />
+                 
+                  
+            
+                ))}
             </SidebarMenu>
           </SidebarContent>
 
@@ -172,16 +222,16 @@ const DashboardLayout: React.FC = () => {
             <Outlet />
           </main>
         </SidebarInset>
-                <DashboardLayoutContent navItems={navItems} />
+                <DashboardLayoutContent navItems={dashboardNavItems} />
 
       </div>
       <Toaster richColors position="bottom-right" expand={false} />
     </SidebarProvider>
-  );
-};
 
-// New component to easily access useSidebar context
-const DashboardLayoutContent: React.FC<{ navItems: Array<{ href: string; label: string; icon: any }> }> = ({ navItems }) => {
+  )};
+
+  // New component to easily access useSidebar context
+  const DashboardLayoutContent: React.FC<{ navItems: NavItemType }> = ({ navItems }) => {
   const { state: sidebarState, isMobile } = useSidebar(); // Get 'expanded' or 'collapsed' state and isMobile
   const location = useLocation();
 
@@ -232,7 +282,8 @@ const DashboardLayoutContent: React.FC<{ navItems: Array<{ href: string; label: 
       </header>
 
       )
-};
-
+  }
+  
+  
 
 export default DashboardLayout;

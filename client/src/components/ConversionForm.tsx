@@ -10,10 +10,10 @@ import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 const successSonnerToastClasses = "bg-green-50 border-green-400 text-green-800 dark:bg-green-900/60 dark:border-green-700 dark:text-green-200 rounded-lg shadow-md p-4";
 const destructiveSonnerToastClasses = "bg-red-50 border-red-400 text-red-800 dark:bg-red-900/60 dark:border-red-700 dark:text-red-200 rounded-lg shadow-md p-4";
 const infoSonnerToastClasses = "bg-blue-50 border-blue-400 text-blue-800 dark:bg-blue-900/60 dark:border-blue-700 dark:text-blue-200 rounded-lg shadow-md p-4";
-interface ConversionSuccessData {
-  litres: number;
-  cm: number; // The CM value that was converted
-}
+// interface ConversionSuccessData {
+//   litres: number;
+//   cm: number; // The CM value that was converted
+// }
 interface ConversionFormProps {
   // UPDATED: Expect an object with litres and cm
   onConversionSuccess: (data: { litres: number; cm: number }) => void; 

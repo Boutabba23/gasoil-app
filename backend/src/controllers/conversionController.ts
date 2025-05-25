@@ -212,18 +212,26 @@ export const getConversionHistory = async (req: Request, res: Response): Promise
 };
 
 // --- Delete Conversion Entry ---
+// server/src/controllers/conversionController.ts
+// ... (imports IUser, Request, Response, mongoose, Conversion model)
+
 export const deleteConversionEntry = async (req: Request, res: Response): Promise<void> => {
-  const currentUser = req.user as IUser | undefined; // Cast req.user
-  const currentUserIdForCheck = currentUser?.googleId; // For ownership check, using Google ID
-
+  const currentUser = req.user as IUser | undefined; // Cast from protect middleware
   const entryId = req.params.id;
+  
+  // Using googleId for ownership check, as decided
+  const currentUserIdForCheck = currentUser?.googleId; 
 
-  if (!currentUser || !currentUserIdForCheck) { // Ensure user and their googleId is present
-    res.status(401).json({ message: 'Utilisateur non authentifié ou ID Google manquant pour la suppression.' });
+  console.log(`DELETE /history/${entryId}: Requested by user Google ID: ${currentUserIdForCheck}`);
+
+  if (!currentUser || !currentUserIdForCheck) {
+    console.log(`DELETE /history/${entryId}: Unauthorized - User not authenticated or googleId missing.`);
+    res.status(401).json({ message: 'Utilisateur non authentifié ou ID utilisateur manquant.' });
     return;
   }
 
   if (!mongoose.Types.ObjectId.isValid(entryId)) {
+    console.log(`DELETE /history/${entryId}: Invalid ObjectId format.`);
     res.status(400).json({ message: 'ID de l\'entrée de conversion invalide.' });
     return;
   }
@@ -231,22 +239,24 @@ export const deleteConversionEntry = async (req: Request, res: Response): Promis
   try {
     const conversionEntry = await Conversion.findById(entryId);
     if (!conversionEntry) {
+      console.log(`DELETE /history/${entryId}: Conversion entry not found.`);
       res.status(404).json({ message: 'Entrée de conversion non trouvée.' });
       return;
     }
 
-    // Ownership check: Conversion.userId (which is googleId string) vs current user's googleId
+    console.log(`DELETE /history/${entryId}: Entry found. Owner on record: ${conversionEntry.userId}, Requester: ${currentUserIdForCheck}`);
+    // Ownership check (assuming conversionEntry.userId stores googleId as string)
     if (conversionEntry.userId !== currentUserIdForCheck) {
-      console.warn(`User ${currentUserIdForCheck} (Google ID) attempt to delete entry ${entryId} owned by ${conversionEntry.userId} (Google ID)`);
+      console.warn(`DELETE /history/${entryId}: Authorization failed. User ${currentUserIdForCheck} does not own entry.`);
       res.status(403).json({ message: 'Non autorisé à supprimer cette entrée (propriétaire différent).' });
       return;
     }
 
     await conversionEntry.deleteOne();
-    console.log(`Conversion entry ${entryId} deleted by user ${currentUserIdForCheck} (Google ID)`);
+    console.log(`DELETE /history/${entryId}: Entry successfully deleted by user ${currentUserIdForCheck}.`);
     res.status(200).json({ message: 'Entrée de conversion supprimée avec succès.' });
   } catch (error: any) {
-    console.error(`Error deleting conversion entry ${entryId} for user ${currentUserIdForCheck}:`, error);
+    console.error(`DELETE /history/${entryId}: Error during deletion for user ${currentUserIdForCheck}:`, error);
     res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'entrée.', error: error.message });
   }
 };
