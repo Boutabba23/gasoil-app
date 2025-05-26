@@ -7,11 +7,28 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
-import ConversionForm from "../components/ConversionForm"; // Import type
+import ConversionForm, {
+  type ConversionSuccessData,
+} from "../components/ConversionForm"; // Import type
 import { Progress } from "@/components/ui/progress";
 import { Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "../lib/api"; // Assuming you might want to fetch initial state
+interface ConversionRecordForLatest {
+  // Tailored for what you expect for "latest"
+  _id: string;
+  value_cm: number;
+  volume_l: number;
+  createdAt: string;
+  // Add userEmail, userName if your backend returns them for the latest record
+}
+interface PaginatedHistoryResponse {
+  // More specific name for this context
+  data: ConversionRecordForLatest[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+}
 
 const ConversionPage: React.FC = () => {
   const [currentLitres, setCurrentLitres] = useState<number | null>(null);
@@ -122,8 +139,13 @@ const ConversionPage: React.FC = () => {
         console.log(
           "ConversionPage: Fetching latest conversion details from API."
         );
-        const response = await api.get<{ volume_l: number; value_cm: number }>(
-          "/data/history?page=1&limit=1" // Assuming history is sorted by newest
+        // 👇 Use the correct response type here
+        const response = await api.get<PaginatedHistoryResponse>(
+          "/data/history?page=1&limit=1"
+        );
+        console.log(
+          "ConversionPage: Raw response from /data/history for latest:",
+          response
         );
         // Adjust endpoint if you have a dedicated one for "latest"
         if (

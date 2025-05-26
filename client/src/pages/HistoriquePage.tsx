@@ -260,15 +260,33 @@ const HistoriquePage: React.FC = () => {
       inputType === "from" ? "Début" : "Fin"
     );
 
-    if (parsedDate !== null) {
-      setCalendarPickerRange((prev) => {
-        const newRange = { ...prev };
-        if (inputType === "from") newRange.from = parsedDate;
-        else newRange.to = parsedDate;
-        return newRange;
-      });
+ 
+    if (parsedDate === null) { // If parseAndValidateDateInput returned null (explicitly invalid)
+        // Do nothing, toast was already shown by parseAndValidateDateInput
+        return;
     }
-  };
+
+    // parsedDate is now Date | undefined
+
+    setCalendarPickerRange((prevRange?: DateRange) => { // Explicitly type prevRange
+      let newFrom = prevRange?.from;
+      let newTo = prevRange?.to;
+
+      if (inputType === 'from') {
+        newFrom = parsedDate; // parsedDate is Date | undefined
+      } else {
+        newTo = parsedDate; // parsedDate is Date | undefined
+      }
+
+      // If both newFrom and newTo are undefined, return undefined for the whole range.
+      // Otherwise, return an object that conforms to DateRange.
+      if (newFrom === undefined && newTo === undefined) {
+        return undefined;
+      }
+      
+      // Ensure the object always has 'from' and 'to', even if one of them is undefined.
+      // This matches react-day-picker's DateRange type definition.
+  });
 
   return (
     <div className="space-y-6">

@@ -6,7 +6,7 @@ import api from "../lib/api";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import axios, { type AxiosError } from "axios";
+import axios from "axios";
 
 const successSonnerToastClasses =
   "bg-green-50 border-green-400 text-green-800 dark:bg-green-900/60 dark:border-green-700 dark:text-green-200 rounded-lg shadow-md p-4";
@@ -19,7 +19,7 @@ interface BackendErrorPayload {
   message?: string;
 }
 
-interface ConversionSuccessData {
+export interface ConversionSuccessData {
   litres: number;
   cm: number;
 }

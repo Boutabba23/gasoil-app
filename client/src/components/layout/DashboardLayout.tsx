@@ -90,7 +90,6 @@ const MobileAwareNavLink: React.FC<{
 const DashboardLayout: React.FC = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const logoContainerSizeClasses =
     "w-[50px] h-[50px] md:w-[50px] md:h-[50px] my-auto";
   const logoImageSizeClasses = "w-10 h-10 md:w-10 md:h-10 item-center";
@@ -99,14 +98,6 @@ const DashboardLayout: React.FC = () => {
     navigate("/login"); // Redirect to login after logout
   };
 
-  // Determine current page title for the header
-  let currentPageTitle = "Tableau de Bord";
-  const activeNavItem = dashboardNavItems.find((item) =>
-    location.pathname.startsWith(item.href)
-  );
-  if (activeNavItem) {
-    currentPageTitle = activeNavItem.label;
-  }
   return (
     <SidebarProvider defaultOpen={true}>
       {" "}
@@ -220,7 +211,7 @@ const DashboardLayout: React.FC = () => {
         {/* Main Content Area */}
         <SidebarInset className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden bg-[#fffcf1] dark:bg-slate-900">
           {/* Header within the main content area */}
-         
+
           {/* Page content rendered by <Outlet /> */}
           <main className="flex-1 p-4 sm:px-6 sm:py-4 md:gap-8 overflow-auto pt-[60px] sm:pt-[calc(60px+theme(spacing.4))]">
             <Outlet />
@@ -234,7 +225,7 @@ const DashboardLayout: React.FC = () => {
 };
 
 // New component to easily access useSidebar context
-const DashboardLayoutContent: React.FC<{ navItems: NavItemType }> = ({
+const DashboardLayoutContent: React.FC<{ navItems: NavItemType[] }> = ({
   navItems,
 }) => {
   const { state: sidebarState, isMobile } = useSidebar(); // Get 'expanded' or 'collapsed' state and isMobile
