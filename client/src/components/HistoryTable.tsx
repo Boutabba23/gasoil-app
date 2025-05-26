@@ -538,11 +538,11 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
               />
             </TableHead>
             <TableHead className="w-[130px]">Date</TableHead>
-            <TableHead className="w-[100px]">Heure</TableHead>
-            <TableHead>Utilisateur</TableHead>
+            <TableHead className="w-[130px]">Heure</TableHead>
+            <TableHead className="w-[130px]">Utilisateur</TableHead>
             <TableHead className="text-right w-[90px]">Jauge (cm)</TableHead>
             <TableHead className="text-right w-[110px]">Volume (L)</TableHead>
-            <TableHead className="text-center w-[90px]">Actions</TableHead>
+            <TableHead className="text-center w-[70px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

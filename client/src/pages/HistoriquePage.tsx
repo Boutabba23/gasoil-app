@@ -32,6 +32,7 @@ import { fr } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useIsMobile } from "../hooks/use-mobile"; // Adjust path if needed
 
 const destructiveSonnerToastClasses =
   "bg-red-50 border-red-400 text-red-800 dark:bg-red-900/60 dark:border-red-700 dark:text-red-200 rounded-lg shadow-md p-4";
@@ -93,6 +94,7 @@ const HistoriquePage: React.FC = () => {
     initialDefaultRange
   );
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const isMobileView = useIsMobile();
 
   const parseAndValidateDateInput = useCallback(
     (
@@ -114,7 +116,66 @@ const HistoriquePage: React.FC = () => {
     },
     []
   );
+  const numericRegex = /^\d*\.?\d*$/;
 
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const currentValue = e.target.value;
+
+    // 1. Allow empty string for clearing
+    if (currentValue === "") {
+      setInputSearchTerm("");
+      return;
+    }
+
+    // 2. Regex to allow only digits and at most one decimal point.
+    //    Does not yet enforce length of integer part.
+    const basicNumericRegex = /^\d*\.?\d*$/;
+    if (!basicNumericRegex.test(currentValue)) {
+      // If it's not even in basic numeric format (e.g., contains letters, multiple dots), ignore.
+      return;
+    }
+
+    // 3. Enforce max 3 digits before the decimal point.
+    const parts = currentValue.split(".");
+    let integerPart = parts[0];
+    const decimalPart = parts.length > 1 ? parts[1] : undefined;
+
+    if (integerPart.length > 3) {
+      integerPart = integerPart.slice(0, 3); // Truncate integer part to 3 digits
+      // Show a toast, but still apply the truncated value
+      toast.warn("Limite de chiffres atteinte", {
+        description: "Maximum 3 chiffres avant la virgule pour la recherche.",
+        duration: 2000,
+      });
+    }
+
+    // 4. Optional: Enforce max digits after the decimal point (e.g., 2)
+    // let finalDecimalPart = decimalPart;
+    // if (decimalPart && decimalPart.length > 2) {
+    //   finalDecimalPart = decimalPart.slice(0, 2);
+    // }
+
+    // 5. Reconstruct the value and update state
+    let finalValue = integerPart;
+    if (currentValue.includes(".")) {
+      // Only add decimal if user typed it or it's part of a valid partial input
+      finalValue += "."; // Add the dot back if it was there or intended
+      if (decimalPart !== undefined) {
+        // Using `finalDecimalPart` if you implemented step 4
+        finalValue += decimalPart;
+      }
+    }
+
+    // One last check to ensure the reconstructed finalValue still passes basic numeric regex
+    // This can catch edge cases if user types just "." initially.
+    if (finalValue === "." || numericRegex.test(finalValue)) {
+      // Using the more general numericRegex from before
+      setInputSearchTerm(finalValue);
+    } else if (finalValue === "") {
+      // if truncation resulted in empty integer and no decimal typed yet
+      setInputSearchTerm("");
+    }
+  };
   const handleApplyFilters = useCallback(() => {
     const parsedFrom = parseAndValidateDateInput(inputFromDateString, "Début");
     const parsedTo = parseAndValidateDateInput(inputToDateString, "Fin");
@@ -212,7 +273,7 @@ const HistoriquePage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="sticky top-0 z-10 py-4 bg-muted/40 dark:bg-slate-900/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6">
-        <Card className="shadow-md dark:border-slate-700">
+        <Card className="shadow-sm dark:border-slate-700">
           <CardHeader className="pb-3 pt-4">
             <CardTitle className="text-lg sm:text-xl">
               Filtrer les Enregistrements
@@ -229,11 +290,11 @@ const HistoriquePage: React.FC = () => {
                   <Input
                     id="search-history-input"
                     type="search"
-                    placeholder="Ex: 135 ou 24500..."
+                    placeholder="Ex: 135cm ou 24500L..."
                     value={inputSearchTerm}
-                    onChange={(e) => setInputSearchTerm(e.target.value)}
+                    onChange={handleSearchInputChange}
                     onKeyDown={handleSearchKeyDown}
-                    className="pl-8 w-full h-10"
+                    className="mt-1 pl-8 block border-2 border-mylight  w-full h-12 shadow-sm sm:text-sm rounded-md dark:bg-slate-700 dark:text-slate-50 dark:border-slate-600"
                   />
                 </div>
               </div>
@@ -248,7 +309,7 @@ const HistoriquePage: React.FC = () => {
                   value={inputFromDateString}
                   onChange={(e) => setInputFromDateString(e.target.value)}
                   onBlur={() => syncCalendarToInputsOnBlur("from")}
-                  className="w-full h-10"
+                  className="mt-1  block border-2 border-mylight w-full h-12 shadow-sm sm:text-sm rounded-md dark:bg-slate-700 dark:text-slate-50 dark:border-slate-600"
                 />
               </div>
               <div className="space-y-1.5">
@@ -262,7 +323,7 @@ const HistoriquePage: React.FC = () => {
                   value={inputToDateString}
                   onChange={(e) => setInputToDateString(e.target.value)}
                   onBlur={() => syncCalendarToInputsOnBlur("to")}
-                  className="w-full h-10"
+                  className="mt-1  block border-2 border-mylight w-full h-12 shadow-sm sm:text-sm rounded-md dark:bg-slate-700 dark:text-slate-50 dark:border-slate-600"
                 />
               </div>
               <div className="flex items-end h-10">
@@ -274,16 +335,17 @@ const HistoriquePage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10 shrink-0"
+                      className="h-12 w-12 shrink-0 border-2 border-mylight hover:cursor-pointer hover:bg-mylight active:bg-mysecondary"
                       aria-label="Ouvrir le calendrier"
                     >
-                      <CalendarIcon className="h-4 w-4" />
+                      <CalendarIcon className="h-5 w-5" />
                     </Button>
-                  </PopoverTrigger>
+                  </PopoverTrigger>{" "}
                   <PopoverContent
                     className="w-auto p-0"
-                    align="end"
-                    sideOffset={5}
+                    align={isMobileView ? "center" : "start"} // Example usage
+                    side={isMobileView ? "right" : "top"}
+                    sideOffset={isMobileView ? 10 : 5}
                   >
                     <Calendar
                       initialFocus
@@ -305,25 +367,27 @@ const HistoriquePage: React.FC = () => {
                           "!bg-blue-500 !text-white hover:!bg-blue-600 dark:!bg-blue-700 dark:!text-white dark:hover:!bg-blue-800 rounded-md font-bold border-2 !border-blue-300 dark:!border-blue-500",
                       }}
                     />
-                    <div className="p-2 border-t border-border flex justify-end">
-                      <Button className="bg-myprimary hover:cursor-pointer hover:bg-mysecondary" size="sm" onClick={handleApplyFilters}>
+                    <div className="p-2 border-t border-border flex justify-center">
+                      <Button
+                        className="bg-myprimary hover:cursor-pointer shadow-md hover:bg-mysecondary"
+                        size="sm"
+                        onClick={handleApplyFilters}
+                      >
                         Rechercher
                       </Button>
                     </div>
                   </PopoverContent>
                 </Popover>
               </div>
-                    <div className="  sm:flex-row gap-2 mt-4 pt-1">
-              <Button
-                onClick={handleApplyFilters}
-                className="w-full sm:w-auto bg-myprimary hover:cursor-pointer hover:bg-mysecondary sm:flex-1 whitespace-nowrap"
-              >
-                <Search className="mr-2 h-4 w-4" /> Rechercher
-              </Button>
-             
+              <div className="  sm:flex-row gap-2 mt-4 pt-1">
+                <Button
+                  onClick={handleApplyFilters}
+                  className="w-full sm:w-auto bg-myprimary hover:cursor-pointer shadow-md hover:bg-mysecondary sm:flex-1 whitespace-nowrap"
+                >
+                  <Search className="mr-2 h-4 w-4" /> Rechercher
+                </Button>
+              </div>
             </div>
-            </div>
-      
           </CardContent>
         </Card>
       </div>

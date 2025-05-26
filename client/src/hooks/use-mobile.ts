@@ -1,19 +1,47 @@
-import * as React from "react"
+// client/src/hooks/use-mobile.ts
+import { useEffect, useState } from "react"
 
-const MOBILE_BREAKPOINT = 768
+// Define the type for the hook, indicating it returns a boolean
+export function useIsMobile(query: string = "(max-width: 768px)"): boolean {
+  const [isMobile, setIsMobile] = useState(false)
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(query)
+    // Update an unmounted component.
+    let isMounted = true
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    // Set initial state
+    if (isMounted) {
+      setIsMobile(mediaQuery.matches)
     }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+    
+    const handleResize = () => {
+      if (isMounted) {
+        setIsMobile(mediaQuery.matches)
+      }
+    }
 
-  return !!isMobile
+    // Add listener for screen size changes
+    // Deprecated 'addListener' for older browser compatibility if needed, but 'addEventListener' is standard
+    try {
+        mediaQuery.addEventListener("change", handleResize)
+    } catch (e) { // Fallback for older browsers like Safari < 14
+        mediaQuery.addListener(handleResize)
+    }
+
+
+    // Clean up listener on unmount
+    return () => {
+      isMounted = false
+      try {
+        mediaQuery.removeEventListener("change", handleResize)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {  // Fallback for older browsers
+        mediaQuery.removeListener(handleResize)
+      }
+
+    }
+  }, [query]) // Re-run effect if the query string changes
+
+  return isMobile
 }
