@@ -8,13 +8,7 @@
        "config": { "typescript": true } 
     }
   ],
-  "routes": [
-  
-    {
-      "src": "/(.*)", 
-      "dest": "src/server.ts" 
-    }
-  ],
+"routes": [ { "src": "/(.*)", "dest": "src/server.ts" } ] ,
   "env": {
     "NODE_ENV": "production"
 
