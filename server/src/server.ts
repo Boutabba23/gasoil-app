@@ -11,7 +11,6 @@ import authRoutes from './routes/authRoutes';
 import conversionRoutes from './routes/conversionRoutes'; // This was the problematic line
 // server/src/server.ts
 // ...
-const app = express();
 
 const clientDevUrl = process.env.CLIENT_URL || 'http://localhost:3000'; // Your local React dev server
 // Vercel sets VERCEL_URL (current deployment) and VERCEL_BRANCH_URL (preview deployments)
@@ -19,16 +18,17 @@ const clientDevUrl = process.env.CLIENT_URL || 'http://localhost:3000'; // Your 
 
 const allowedOrigins = [clientDevUrl];
 if (process.env.NODE_ENV === 'production') {
-    if (process.env.VERCEL_URL) { // Base Vercel URL for current deployment (e.g., my-app-sha.vercel.app)
-         allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
-    }
-    if (process.env.DEPLOYED_CLIENT_URL) { // Your custom production domain (set this in Vercel env vars)
-        allowedOrigins.push(process.env.DEPLOYED_CLIENT_URL);
-    }
+  if (process.env.VERCEL_URL) { // Base Vercel URL for current deployment (e.g., my-app-sha.vercel.app)
+    allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
+  }
+  if (process.env.DEPLOYED_CLIENT_URL) { // Your custom production domain (set this in Vercel env vars)
+    allowedOrigins.push(process.env.DEPLOYED_CLIENT_URL);
+  }
 } else { // Development
-     // For local, could also allow Vercel CLI local emulation if used: http://localhost:SOME_VERCEL_PORT
+  // For local, could also allow Vercel CLI local emulation if used: http://localhost:SOME_VERCEL_PORT
 }
 console.log("Allowed CORS origins:", allowedOrigins);
+const app = express();
 
 
 app.use(cors({
@@ -71,3 +71,5 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(
   `Serveur démarré en mode ${process.env.NODE_ENV || 'development'} sur le port ${PORT}`
 ));
+
+ export default app; // This is what Vercel's @vercel/node builder looks for
