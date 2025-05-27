@@ -15,7 +15,7 @@ const app = express(); // Create the app instance
 // Connect to Database (do this early)
 connectDB();
 
-// Middlewares
+// Middlewares                                                        
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
             ? process.env.VERCEL_CLIENT_URL // Your deployed frontend URL
