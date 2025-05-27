@@ -3,7 +3,7 @@
 // Ensure this path is correct relative to this index.d.ts file
 // From: server/src/types/express/index.d.ts
 // To:   server/src/models/User.ts
-import { IUser } from '../../models/User';
+import { IUser } from '@/models/User';
 
 declare global {
   namespace Express {
