@@ -252,43 +252,22 @@ const HistoriquePage: React.FC = () => {
     );
   };
 
-  const syncCalendarToInputsOnBlur = (inputType: "from" | "to") => {
-    const dateStringToParse =
-      inputType === "from" ? inputFromDateString : inputToDateString;
-    const parsedDate = parseAndValidateDateInput(
-      dateStringToParse,
-      inputType === "from" ? "Début" : "Fin"
-    );
+// CORRECTED syncCalendarToInputsOnBlur
+const syncCalendarToInputsOnBlur = (inputType: "from" | "to") => {
+  const dateStringToParse = inputType === "from" ? inputFromDateString : inputToDateString;
+  const parsedDate = parseAndValidateDateInput( dateStringToParse, inputType === "from" ? "Début" : "Fin" );
 
-    if (parsedDate === null) {
-      // If parseAndValidateDateInput returned null (explicitly invalid)
-      // Do nothing, toast was already shown by parseAndValidateDateInput
-      return;
-    }
-
-    // parsedDate is now Date | undefined
-
-    setCalendarPickerRange((prevRange?: DateRange) => {
-      // Explicitly type prevRange
-      let newFrom = prevRange?.from;
-      let newTo = prevRange?.to;
-
-      if (inputType === "from") {
-        newFrom = parsedDate; // parsedDate is Date | undefined
-      } else {
-        newTo = parsedDate; // parsedDate is Date | undefined
-      }
-
-      // If both newFrom and newTo are undefined, return undefined for the whole range.
-      // Otherwise, return an object that conforms to DateRange.
-      if (newFrom === undefined && newTo === undefined) {
-        return undefined;
-      }
-
-      // Ensure the object always has 'from' and 'to', even if one of them is undefined.
-      // This matches react-day-picker's DateRange type definition.
-    });
-  };
+  if (parsedDate === null) { // Explicitly invalid
+    return;
+  }
+  // parsedDate is now Date | undefined
+  setCalendarPickerRange((prevRange) => {
+    const newFrom = inputType === "from" ? parsedDate : prevRange?.from;
+    const newTo = inputType === "to" ? parsedDate : prevRange?.to;
+    if (newFrom === undefined && newTo === undefined) return undefined;
+    return { from: newFrom, to: newTo };
+  }); // Correctly closed
+};
   return (
     <div className="space-y-6">
       <div className="sticky top-0 z-10 py-4 bg-muted/40 dark:bg-slate-900/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6">
@@ -444,6 +423,6 @@ const HistoriquePage: React.FC = () => {
         </CardContent>
       </Card>
     </div>
-  );
+);
 };
 export default HistoriquePage;
