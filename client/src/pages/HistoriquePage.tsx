@@ -287,7 +287,7 @@ const HistoriquePage: React.FC = () => {
       // Ensure the object always has 'from' and 'to', even if one of them is undefined.
       // This matches react-day-picker's DateRange type definition.
   });
-
+  }
   return (
     <div className="space-y-6">
       <div className="sticky top-0 z-10 py-4 bg-muted/40 dark:bg-slate-900/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6">
@@ -444,7 +444,7 @@ const HistoriquePage: React.FC = () => {
       </Card>
     </div>
   );
-  }
   
+
 }
 export default HistoriquePage;
