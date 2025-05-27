@@ -143,10 +143,10 @@ const HistoriquePage: React.FC = () => {
     if (integerPart.length > 3) {
       integerPart = integerPart.slice(0, 3); // Truncate integer part to 3 digits
       // Show a toast, but still apply the truncated value
-      toast.warn("Limite de chiffres atteinte", {
-        description: "Maximum 3 chiffres avant la virgule pour la recherche.",
-        duration: 2000,
-      });
+      // toast.warn("Limite de chiffres atteinte", {
+      //   description: "Maximum 3 chiffres avant la virgule pour la recherche.",
+      //   duration: 2000,
+      // });
     }
 
     // 4. Optional: Enforce max digits after the decimal point (e.g., 2)
@@ -260,19 +260,20 @@ const HistoriquePage: React.FC = () => {
       inputType === "from" ? "Début" : "Fin"
     );
 
- 
-    if (parsedDate === null) { // If parseAndValidateDateInput returned null (explicitly invalid)
-        // Do nothing, toast was already shown by parseAndValidateDateInput
-        return;
+    if (parsedDate === null) {
+      // If parseAndValidateDateInput returned null (explicitly invalid)
+      // Do nothing, toast was already shown by parseAndValidateDateInput
+      return;
     }
 
     // parsedDate is now Date | undefined
 
-    setCalendarPickerRange((prevRange?: DateRange) => { // Explicitly type prevRange
+    setCalendarPickerRange((prevRange?: DateRange) => {
+      // Explicitly type prevRange
       let newFrom = prevRange?.from;
       let newTo = prevRange?.to;
 
-      if (inputType === 'from') {
+      if (inputType === "from") {
         newFrom = parsedDate; // parsedDate is Date | undefined
       } else {
         newTo = parsedDate; // parsedDate is Date | undefined
@@ -283,11 +284,11 @@ const HistoriquePage: React.FC = () => {
       if (newFrom === undefined && newTo === undefined) {
         return undefined;
       }
-      
+
       // Ensure the object always has 'from' and 'to', even if one of them is undefined.
       // This matches react-day-picker's DateRange type definition.
-  });
-  }
+    });
+  };
   return (
     <div className="space-y-6">
       <div className="sticky top-0 z-10 py-4 bg-muted/40 dark:bg-slate-900/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6">
@@ -444,7 +445,5 @@ const HistoriquePage: React.FC = () => {
       </Card>
     </div>
   );
-  
-
-}
+};
 export default HistoriquePage;
