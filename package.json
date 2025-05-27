@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "build": "pnpm --filter ./server run build",
+    "dev:server": "pnpm --filter ./server run dev",
+    "dev:client": "pnpm --filter ./client run dev"
+  }
+}
