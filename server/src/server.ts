@@ -33,17 +33,17 @@ app.use('/api/data', conversionRoutes);
 // --- Vercel will handle serving static frontend assets directly ---
 // --- You usually don't need this part for Vercel deployments if client is separate Vercel output ---
 // // Serve frontend in production (if backend was handling this, which Vercel will do differently)
-// if (process.env.NODE_ENV === 'production') {
-//   // Assuming your client app builds to '../client/dist' relative to 'server/dist'
-//   const clientBuildPath = path.resolve(__dirname, '../../client/dist');
-//   console.log('Serving static files from:', clientBuildPath);
-//   app.use(express.static(clientBuildPath));
-//   app.get('*', (req, res) => res.sendFile(path.resolve(clientBuildPath, 'index.html')));
-// } else {
-//   app.get('/', (req, res) => {
-//     res.send('API is running in development...');
-//   });
-// }
+if (process.env.NODE_ENV === 'production') {
+  // Assuming your client app builds to '../client/dist' relative to 'server/dist'
+  const clientBuildPath = path.resolve(__dirname, '../../client/dist');
+  console.log('Serving static files from:', clientBuildPath);
+  app.use(express.static(clientBuildPath));
+  app.get('*', (req, res) => res.sendFile(path.resolve(clientBuildPath, 'index.html')));
+} else {
+  app.get('/', (req, res) => {
+    res.send('API is running in development...');
+  });
+}
 
 
 // Export the app for Vercel serverless function
