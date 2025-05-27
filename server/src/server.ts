@@ -1,75 +1,62 @@
-import dotenv from 'dotenv';
-dotenv.config(); // Load environment variables first
-
-import express from 'express';
-import cors from 'cors';
-import passport from './config/passport'; // Your Passport configuration
-import connectDB from './config/db';
-
-// 👇 Import using default import syntax
-import authRoutes from './routes/authRoutes';
-import conversionRoutes from './routes/conversionRoutes'; // This was the problematic line
 // server/src/server.ts
-// ...
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import passport from './config/passport';
+import connectDB from './config/db';
+import authRoutes from './routes/authRoutes';
+import conversionRoutes from './routes/conversionRoutes';
+import path from 'path'; // For serving static files if backend also serves frontend (not the Vercel primary way)
 
-const clientDevUrl = process.env.CLIENT_URL || 'http://localhost:3000'; // Your local React dev server
-// Vercel sets VERCEL_URL (current deployment) and VERCEL_BRANCH_URL (preview deployments)
-// You'll also have a production domain later.
+dotenv.config();
 
-const allowedOrigins = [clientDevUrl];
-if (process.env.NODE_ENV === 'production') {
-  if (process.env.VERCEL_URL) { // Base Vercel URL for current deployment (e.g., my-app-sha.vercel.app)
-    allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
-  }
-  if (process.env.DEPLOYED_CLIENT_URL) { // Your custom production domain (set this in Vercel env vars)
-    allowedOrigins.push(process.env.DEPLOYED_CLIENT_URL);
-  }
-} else { // Development
-  // For local, could also allow Vercel CLI local emulation if used: http://localhost:SOME_VERCEL_PORT
-}
-console.log("Allowed CORS origins:", allowedOrigins);
-const app = express();
+const app = express(); // Create the app instance
 
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests) for APIs or specific cases
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true 
-}));
-// ...
-
-// Connect to Database
+// Connect to Database (do this early)
 connectDB();
 
 // Middlewares
 app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true 
+  origin: process.env.NODE_ENV === 'production' 
+            ? process.env.VERCEL_CLIENT_URL // Your deployed frontend URL
+            : process.env.CLIENT_URL,    // http://localhost:xxxx for local dev
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Passport Middleware (initialize only, no session if using JWTs for app auth)
 app.use(passport.initialize());
 
 // API Routes
-app.use('/api/auth', authRoutes); // Mount the auth router
-app.use('/api/data', conversionRoutes); // Mount the conversion data router
+app.use('/api/auth', authRoutes);
+app.use('/api/data', conversionRoutes);
 
-app.get('/', (req, res) => {
-  res.send('API de gestion de gasoil démarrée avec succès!');
-});
+// --- Vercel will handle serving static frontend assets directly ---
+// --- You usually don't need this part for Vercel deployments if client is separate Vercel output ---
+// // Serve frontend in production (if backend was handling this, which Vercel will do differently)
+// if (process.env.NODE_ENV === 'production') {
+//   // Assuming your client app builds to '../client/dist' relative to 'server/dist'
+//   const clientBuildPath = path.resolve(__dirname, '../../client/dist');
+//   console.log('Serving static files from:', clientBuildPath);
+//   app.use(express.static(clientBuildPath));
+//   app.get('*', (req, res) => res.sendFile(path.resolve(clientBuildPath, 'index.html')));
+// } else {
+//   app.get('/', (req, res) => {
+//     res.send('API is running in development...');
+//   });
+// }
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(
-  `Serveur démarré en mode ${process.env.NODE_ENV || 'development'} sur le port ${PORT}`
-));
 
- export default app; // This is what Vercel's @vercel/node builder looks for
+// Export the app for Vercel serverless function
+// The listening part (app.listen) will only be for local development
+// Vercel handles starting the server in its serverless environment.
+export default app;
+
+// Start server only if not in Vercel environment (for local development)
+// Vercel sets a `VERCEL` environment variable.
+// if (!process.env.VERCEL) { // Vercel sets VERCEL env var
+//  const PORT = process.env.PORT || 5000;
+//  app.listen(PORT, () => console.log(`Server running locally on port ${PORT}`));
+//}
+// A common pattern for local dev script (e.g. in server/package.json -> "start": "node dist/server.js")
+// might involve a separate entry point for local that calls listen.
+// For Vercel, it just needs the exported 'app'.

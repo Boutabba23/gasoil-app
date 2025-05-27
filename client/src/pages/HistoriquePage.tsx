@@ -444,5 +444,7 @@ const HistoriquePage: React.FC = () => {
       </Card>
     </div>
   );
-};
+  }
+  
+}
 export default HistoriquePage;

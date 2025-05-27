@@ -1,0 +1,37 @@
+
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "client/package.json",
+        "use": "@vercel/static-build",
+        "config": {
+          "distDir": "dist" 
+        }
+      },
+      {
+        "src": "/server/types/express/index.d.ts", 
+        "use": "@vercel/node"
+      }
+    ],
+    "rewrites": [
+      
+      {
+        "source": "/api/(.*)", 
+        "destination": "/server/types/express/index.d.ts" 
+      },
+    
+      {
+        "source": "/(.*)",
+        "destination": "/client/index.html" 
+      }
+    ],
+    "env": {
+      "MONGODB_URI": "@mongodb+srv://boubjoda:boubjoda281194@gestion-gasopil.hr2bizp.mongodb.net/?retryWrites=true&w=majority&appName=Gestion-Gasopil",
+      "JWT_SECRET": "@Boubjoda281194",
+      "JWT_EXPIRES_IN_SECONDS": "86400",
+      "GOOGLE_CLIENT_ID": "@933963576564-oc4m9vu2g246dneusiqep9tj9kc9tcmv.apps.googleusercontent.com",
+      "GOOGLE_CLIENT_SECRET": "@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",
+      "CLIENT_URL_PROD": "YOUR_DEPLOYED_FRONTEND_URL_ON_VERCEL"   },
+    "regions": ["cdg1"]
+  }
