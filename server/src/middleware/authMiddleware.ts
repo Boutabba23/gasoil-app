@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken'; // <<< Import JwtPayload
 import User from '../models/User'; // Mongoose User model
 import type { IUser } from '../models/User'; // IUser type interface
 
-interface DecodedToken {
+interface DecodedToken extends JwtPayload {
   googleId: string;
   id: string; // This should be the MongoDB _id of the User
   iat: number;

@@ -1,4 +1,5 @@
-import express from 'express';
+
+import express,{ Request, Response, NextFunction }  from 'express';
 import passport from '../config/passport';
 import { googleCallback, getMe, logout } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
@@ -7,7 +8,7 @@ const router = express.Router();
 
 router.get(
   '/google',
-  (req, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => { // <<< EXPLICIT TYPES
     const authOptions: passport.AuthenticateOptions = {
       scope: ['profile', 'email'],
       session: false, 
