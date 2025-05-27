@@ -31,7 +31,7 @@
     "GOOGLE_CLIENT_SECRET": "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",
     "GOOGLE_CALLBACK_URL": "https://gasoil-app.vercel.app/api/auth/google/callback",
     "CLIENT_URL": "https://YOUR_FRONTEND_DEPLOYMENT_URL.vercel.app",
-    "NODE_ENV": "production",
-    "regions": ["cdg1"]
-  }
+    "NODE_ENV": "production"
+  },
+  "regions": ["cdg1"]
 }
