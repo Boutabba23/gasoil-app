@@ -36,6 +36,7 @@ import {
 import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
+import { useAuth } from "../contexts/AuthContext"; // Assuming useAuth now returns isAdmin
 
 const successSonnerToastClasses =
   "bg-green-50 border-green-400 text-green-800 dark:bg-green-900/60 dark:border-green-700 dark:text-green-200 rounded-lg shadow-md p-4";
@@ -89,6 +90,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   // --- End New State ---
+  const { user, isAdmin } = useAuth(); // Get user and isAdmin status
 
   const itemsPerPage = 10;
   const isMounted = useRef(false);
@@ -477,7 +479,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 
   return (
     <div className="space-y-6">
-      {selectedRowIds.length > 0 && (
+      {isAdmin && selectedRowIds.length > 0 && (
         <div
           className={cn(
             // Base styles: flex, vertical stacking for extra-small screens
@@ -524,25 +526,29 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
         )}
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px] px-2 text-center">
-              <Checkbox
-                // checked: Only true when ALL on page are selected
-                checked={isAllOnPageSelected}
-                className=""
-                // isIndeterminate: True when SOME but not ALL are selected
-                isIndeterminate={isHeaderCheckboxIndeterminate}
-                // onCheckedChange: Calls our select all/none logic
-                onCheckedChange={handleSelectAllRowsOnPage}
-                aria-label="Sélectionner toutes les lignes sur cette page"
-                disabled={history.length === 0 || isLoading}
-              />
-            </TableHead>
+            {isAdmin && (
+              <TableHead className="w-[50px] px-2 text-center">
+                <Checkbox
+                  // checked: Only true when ALL on page are selected
+                  checked={isAllOnPageSelected}
+                  className=""
+                  // isIndeterminate: True when SOME but not ALL are selected
+                  isIndeterminate={isHeaderCheckboxIndeterminate}
+                  // onCheckedChange: Calls our select all/none logic
+                  onCheckedChange={handleSelectAllRowsOnPage}
+                  aria-label="Sélectionner toutes les lignes sur cette page"
+                  disabled={history.length === 0 || isLoading}
+                />
+              </TableHead>
+            )}
             <TableHead className="w-[130px]">Date</TableHead>
             <TableHead className="w-[130px]">Heure</TableHead>
             <TableHead className="w-[130px]">Utilisateur</TableHead>
             <TableHead className="text-right w-[90px]">Jauge (cm)</TableHead>
             <TableHead className="text-right w-[110px]">Volume (L)</TableHead>
-            <TableHead className="text-center w-[70px]">Actions</TableHead>
+            {isAdmin && (
+              <TableHead className="text-center w-[70px]">Actions</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -557,13 +563,15 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                     "bg-muted/50 dark:bg-slate-800/50 hover:bg-muted dark:hover:bg-slate-800"
                 )}
               >
-                <TableCell className="px-2 text-center">
-                  <Checkbox
-                    checked={!!selectedRows[record._id]}
-                    onCheckedChange={() => handleSelectRow(record._id)}
-                    aria-label={`Sélectionner la ligne`}
-                  />
-                </TableCell>
+                {isAdmin && (
+                  <TableCell className="px-2 text-center">
+                    <Checkbox
+                      checked={!!selectedRows[record._id]}
+                      onCheckedChange={() => handleSelectRow(record._id)}
+                      aria-label={`Sélectionner la ligne`}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>
                   {format(new Date(record.createdAt), "dd/MM/yyyy", {
                     locale: fr,
@@ -609,22 +617,24 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                 <TableCell className="text-right">
                   {record.volume_l.toFixed(2)}
                 </TableCell>
-                <TableCell className="text-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(record)}
-                    disabled={isDeletingId === record._id}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    title="Supprimer"
-                  >
-                    {isDeletingId === record._id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TableCell>
+                {isAdmin && (
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(record)}
+                      disabled={isDeletingId === record._id}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      title="Supprimer"
+                    >
+                      {isDeletingId === record._id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
         </TableBody>
