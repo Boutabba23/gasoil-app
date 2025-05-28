@@ -65,8 +65,9 @@ export const bulkDeleteConversionEntries = async (req: Request, res: Response): 
     const adminGoogleIdFromEnv = process.env.ADMIN_GOOGLE_ID;
 
   if (!adminGoogleIdFromEnv) {
-    res.status(401).json({ message: 'Utilisateur non authentifié.' });
-    return;
+console.error("BULK DELETE: CRITICAL - ADMIN_GOOGLE_ID is not configured. Action blocked.");
+    res.status(500).json({ message: "Erreur de configuration serveur (privilèges administrateur)." });
+       return;
   }
 if (!currentUser || !currentUser.googleId || currentUser.googleId !== adminGoogleIdFromEnv) {
         res.status(403).json({ message: 'Action non autorisée. Privilèges administrateur requis pour la suppression groupée.' });
@@ -76,58 +77,36 @@ if (!currentUser || !currentUser.googleId || currentUser.googleId !== adminGoogl
     res.status(400).json({ message: 'Liste d\'IDs requise pour la suppression groupée.' });
     return;
   }
+  const validObjectIds: mongoose.Types.ObjectId[] = [];
 
   // Validate all IDs
   for (const id of ids) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
+            console.log(`BULK DELETE (Admin): Error - Invalid ObjectId format in array: ${id}`);
+
       res.status(400).json({ message: `ID de conversion invalide trouvé: ${id}` });
       return;
     }
+        validObjectIds.push(new mongoose.Types.ObjectId(id)); // Convert string IDs to ObjectIds
+
   }
+  console.log("BULK DELETE (Admin): All provided IDs validated. Count:", validObjectIds.length);
 
-  try {
-    // Fetch the entries to verify ownership before deleting
-    // This is important for security.
-    const entriesToDelete = await Conversion.find({ 
-      _id: { $in: ids },
-      // userId: currentUser.googleId // CRUCIAL: Only allow deleting own entries
-    });
-
-    const ownedEntryIds = entriesToDelete
-        .filter(entry => entry.userId === currentUser.googleId) // Double check ownership
-        .map(entry => entry._id);
-
-    if (ownedEntryIds.length === 0) {
-      res.status(403).json({ message: 'Aucune entrée valide à supprimer ou non autorisé.' });
-      return;
-    }
-    
-    // If some entries were not owned or not found, you could inform the user,
-    // but for now, we proceed with deleting only the owned ones.
-    if (ownedEntryIds.length < ids.length) {
-        console.warn(`Bulk delete: User ${currentUser.googleId} attempted to delete non-owned/non-existent entries. Only ${ownedEntryIds.length} of ${ids.length} will be deleted.`);
-    }
-
-
-    const deleteResult = await Conversion.deleteMany({ 
-      _id: { $in: ownedEntryIds }, // Only delete IDs confirmed to be owned
-      // userId: currentUser.googleId // Redundant if already filtered above, but good for direct deleteMany without pre-fetch
-    });
-    console.log("BULK DELETE: Mongoose deleteMany result:", deleteResult);
+try {
+    // Admin deletes the entries specified by their _id. No further ownership check needed here
+    // because the user has already been verified as admin.
+    const deleteResult = await Conversion.deleteMany({ _id: { $in: validObjectIds } });
+    console.log("BULK DELETE (Admin): Mongoose deleteMany result:", deleteResult);
 
     if (deleteResult.deletedCount > 0) {
-      console.log(`${deleteResult.deletedCount} conversion entries bulk deleted by user ${currentUser.googleId}`);
-      res.status(200).json({ message: `${deleteResult.deletedCount} entrée(s) supprimée(s) avec succès.` });
+      res.status(200).json({ message: `${deleteResult.deletedCount} entrée(s) supprimée(s) avec succès par l'administrateur.` });
     } else {
-      // This case might happen if pre-fetched entries were somehow deleted before this step,
-      // or if none of the provided IDs matched owned entries after the filter.
-      console.log("BULK DELETE: Mongoose deleteMany reported 0 documents deleted, though ownedEntryIds were found.");
-      res.status(404).json({ message: 'Aucune entrée correspondante trouvée pour la suppression (ou non autorisé).' });
-
+      // This means none of the validObjectIds provided actually existed in the database.
+      console.log("BULK DELETE (Admin): Mongoose deleteMany reported 0 documents deleted (IDs not found).");
+      res.status(404).json({ message: 'Aucune des entrées spécifiées n\'a été trouvée pour la suppression (elles pourraient avoir déjà été supprimées).' });
     }
-
   } catch (error: any) {
-    console.error('Error during bulk delete conversion entries:', error);
+    console.error('BULK DELETE (Admin): Error during database operation:', error);
     res.status(500).json({ message: 'Erreur serveur lors de la suppression groupée.', error: error.message });
   }
 };
