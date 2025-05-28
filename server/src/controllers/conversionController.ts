@@ -62,13 +62,16 @@ export const convertCmToLitres = async (req: Request, res: Response): Promise<vo
 export const bulkDeleteConversionEntries = async (req: Request, res: Response): Promise<void> => {
   const currentUser = req.user as IUser | undefined;
   const { ids } = req.body; // Expect an array of entry IDs in the request body
-  console.log("BULK DELETE: Received request. User:", currentUser?.googleId, "IDs to delete:", ids); // Log received data
+    const adminGoogleIdFromEnv = process.env.ADMIN_GOOGLE_ID;
 
-  if (!currentUser || !currentUser.googleId) {
+  if (!adminGoogleIdFromEnv) {
     res.status(401).json({ message: 'Utilisateur non authentifié.' });
     return;
   }
-
+if (!currentUser || !currentUser.googleId || currentUser.googleId !== adminGoogleIdFromEnv) {
+        res.status(403).json({ message: 'Action non autorisée. Privilèges administrateur requis pour la suppression groupée.' });
+        return;
+    }
   if (!Array.isArray(ids) || ids.length === 0) {
     res.status(400).json({ message: 'Liste d\'IDs requise pour la suppression groupée.' });
     return;
@@ -219,44 +222,54 @@ export const deleteConversionEntry = async (req: Request, res: Response): Promis
   const currentUser = req.user as IUser | undefined; // Cast from protect middleware
   const entryId = req.params.id;
   
-  // Using googleId for ownership check, as decided
-  const currentUserIdForCheck = currentUser?.googleId; 
+   const adminGoogleIdFromEnv = process.env.ADMIN_GOOGLE_ID;
 
-  console.log(`DELETE /history/${entryId}: Requested by user Google ID: ${currentUserIdForCheck}`);
+  console.log(`DELETE /history/${entryId}: Attempted by user Google ID: ${currentUser?.googleId}. Admin ID configured: ${adminGoogleIdFromEnv}`);
 
-  if (!currentUser || !currentUserIdForCheck) {
-    console.log(`DELETE /history/${entryId}: Unauthorized - User not authenticated or googleId missing.`);
-    res.status(401).json({ message: 'Utilisateur non authentifié ou ID utilisateur manquant.' });
+ // 1. Is Admin ID configured in .env?
+  if (!adminGoogleIdFromEnv) {
+    console.error("SECURITY ALERT: ADMIN_GOOGLE_ID is not configured on the server. Delete actions are blocked.");
+    res.status(500).json({ message: "Erreur de configuration serveur critique. Contactez l'administrateur." });
     return;
   }
 
+
+    // 2. Is the current user the configured Admin?
+  if (!currentUser || !currentUser.googleId || currentUser.googleId !== adminGoogleIdFromEnv) {
+    console.warn(`DELETE /history/${entryId}: Authorization FAILED. Requester ${currentUser?.googleId} is NOT the admin (${adminGoogleIdFromEnv}).`);
+    // If you want a generic message for non-admins:
+    res.status(403).json({ message: 'Action non autorisée. Privilèges administrateur requis.' });
+    // If you want the specific "propriétaire différent" when NOT admin AND NOT owner (more complex):
+    // This would require fetching the entry first to check its owner, which is not needed if only admin deletes.
+    return;
+  }
+
+
+
+// 3. If execution reaches here, user IS the Admin. Proceed with deletion.
+  console.log(`DELETE /history/${entryId}: User ${currentUser.googleId} IS ADMIN. Proceeding with deletion.`);
+
   if (!mongoose.Types.ObjectId.isValid(entryId)) {
-    console.log(`DELETE /history/${entryId}: Invalid ObjectId format.`);
+    console.log(`DELETE /history/${entryId}: Invalid ObjectId format for entryId.`);
     res.status(400).json({ message: 'ID de l\'entrée de conversion invalide.' });
     return;
   }
 
-  try {
-    const conversionEntry = await Conversion.findById(entryId);
-    if (!conversionEntry) {
-      console.log(`DELETE /history/${entryId}: Conversion entry not found.`);
+
+    try {
+    const result = await Conversion.deleteOne({ _id: entryId }); // Admin deletes by _id directly
+
+    if (result.deletedCount === 0) {
+      console.log(`DELETE /history/${entryId}: Conversion entry not found by admin.`);
       res.status(404).json({ message: 'Entrée de conversion non trouvée.' });
       return;
     }
 
-    console.log(`DELETE /history/${entryId}: Entry found. Owner on record: ${conversionEntry.userId}, Requester: ${currentUserIdForCheck}`);
-    // Ownership check (assuming conversionEntry.userId stores googleId as string)
-    if (conversionEntry.userId !== currentUserIdForCheck) {
-      console.warn(`DELETE /history/${entryId}: Authorization failed. User ${currentUserIdForCheck} does not own entry.`);
-      res.status(403).json({ message: 'Non autorisé à supprimer cette entrée (propriétaire différent).' });
-      return;
-    }
+    console.log(`DELETE /history/${entryId}: Entry successfully deleted by ADMIN ${currentUser.googleId}.`);
+    res.status(200).json({ message: 'Entrée de conversion supprimée avec succès par l\'administrateur.' });
 
-    await conversionEntry.deleteOne();
-    console.log(`DELETE /history/${entryId}: Entry successfully deleted by user ${currentUserIdForCheck}.`);
-    res.status(200).json({ message: 'Entrée de conversion supprimée avec succès.' });
   } catch (error: any) {
-    console.error(`DELETE /history/${entryId}: Error during deletion for user ${currentUserIdForCheck}:`, error);
+    console.error(`DELETE /history/${entryId}: Error during deletion by admin ${currentUser.googleId}:`, error);
     res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'entrée.', error: error.message });
   }
 };
