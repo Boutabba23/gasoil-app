@@ -104,6 +104,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("authToken");
     delete api.defaults.headers.common["Authorization"];
     // Set isLoading to true BEFORE setting the token to null
+    setIsAdmin(false); // Reset admin state on logout
+
     setIsLoading(true);
     setToken(null); // This will trigger the useEffect, which then sets user to null and isLoading to false
   };
@@ -118,7 +120,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, isLoading, login, logout, isAdmin }}
+    >
       {children}
     </AuthContext.Provider>
   );

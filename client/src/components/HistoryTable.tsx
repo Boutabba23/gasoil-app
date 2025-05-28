@@ -90,7 +90,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   // --- End New State ---
-  const { user, isAdmin } = useAuth(); // Get user and isAdmin status
+  const { isAdmin } = useAuth(); // Get user and isAdmin status
 
   const itemsPerPage = 10;
   const isMounted = useRef(false);
