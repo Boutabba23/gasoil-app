@@ -275,7 +275,7 @@ const HistoriquePage: React.FC = () => {
   };
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 py-4 bg-muted/40 dark:bg-slate-900/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6">
+      <div className="sticky top-0 z-10 py-4  dark:bg-slate-900/80 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6">
         <Card className="shadow-sm dark:border-slate-700">
           <CardHeader className="pb-3 pt-4">
             <CardTitle className="text-lg sm:text-xl">

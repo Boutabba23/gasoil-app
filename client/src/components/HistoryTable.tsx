@@ -542,10 +542,10 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
               </TableHead>
             )}
             <TableHead className="w-[130px]">Date</TableHead>
-            <TableHead className="w-[130px]">Heure</TableHead>
-            <TableHead className="w-[130px]">Utilisateur</TableHead>
+            <TableHead className="w-[100px]">Heure</TableHead>
             <TableHead className="text-right w-[90px]">Jauge (cm)</TableHead>
             <TableHead className="text-right w-[110px]">Volume (L)</TableHead>
+            <TableHead className="w-[100px]">Utilisateur</TableHead>
             {isAdmin && (
               <TableHead className="text-center w-[70px]">Actions</TableHead>
             )}
@@ -582,6 +582,12 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                     locale: fr,
                   })}
                 </TableCell>
+                <TableCell className="text-right">
+                  {record.value_cm.toFixed(1)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {record.volume_l.toFixed(2)}
+                </TableCell>
                 <TableCell className="text-xs min-w-[150px] max-w-[250px] truncate">
                   {" "}
                   {/* Width control for user col */}
@@ -610,12 +616,6 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                       Non disponible
                     </span>
                   )}
-                </TableCell>
-                <TableCell className="text-right">
-                  {record.value_cm.toFixed(1)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {record.volume_l.toFixed(2)}
                 </TableCell>
                 {isAdmin && (
                   <TableCell className="text-center">
