@@ -376,7 +376,7 @@ const HistoriquePage: React.FC = () => {
       {/* 👇 START OF CHANGE 4: Always use Collapsible structure */}
       <div
         className={cn(
-          "sticky top-0 z-10 py-1 bg-muted/40 dark:bg-slate-900/80 backdrop-blur-sm",
+          "sticky top-0 z-10 py-1  dark:bg-slate-900/80 backdrop-blur-sm",
           "-mx-4 sm:-mx-6 px-4 sm:px-6",
           !isFiltersOpen ? "pb-1" : "pb-4" // Adjust padding based on open state
         )}
