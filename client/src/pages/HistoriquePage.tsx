@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription, // Can be used for desktop static description
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import HistoryTable from "../components/HistoryTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -448,10 +442,6 @@ const HistoriquePage: React.FC = () => {
         {/* Slightly adjust margin when filter is collapsed on mobile */}
         <CardHeader>
           <CardTitle>Liste des Enregistrements</CardTitle>
-          {(activeSearchTerm ||
-            activeDateRange?.from ||
-            activeDateRange?.to) && (
-          )}
         </CardHeader>
         <CardContent>
           <HistoryTable
