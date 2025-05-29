@@ -67,6 +67,7 @@ app.get('/', (req, res) => {
   res.send('API de gestion de gasoil démarrée avec succès!');
 });
 
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(
   `Serveur démarré en mode ${process.env.NODE_ENV || 'development'} sur le port ${PORT}`

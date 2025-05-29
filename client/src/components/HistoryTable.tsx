@@ -545,7 +545,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
             <TableHead className="w-[60px]">Heure</TableHead>
             <TableHead className="text-right w-[60px]">Jauge (cm)</TableHead>
             <TableHead className="text-right w-[60px]">Volume (L)</TableHead>
-            <TableHead className="w-[80px]">Utilisateur</TableHead>
+            <TableHead className="pl-10 w-[80px]">Utilisateur</TableHead>
             {isAdmin && (
               <TableHead className="text-center w-[40px]">Actions</TableHead>
             )}
@@ -588,7 +588,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                 <TableCell className="text-right">
                   {record.volume_l.toFixed(2)}
                 </TableCell>
-                <TableCell className="text-xs min-w-[150px] max-w-[250px] truncate">
+                <TableCell className="pl-10 text-xs min-w-[150px] max-w-[250px] truncate">
                   {" "}
                   {/* Width control for user col */}
                   {record.userName &&
