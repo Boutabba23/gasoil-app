@@ -381,7 +381,7 @@ const HistoriquePage: React.FC = () => {
           !isFiltersOpen ? "pb-1" : "pb-4" // Adjust padding based on open state
         )}
       >
-        <Card className="shadow-md dark:border-slate-700 overflow-hidden">
+        <Card className="shadow-sm dark:border-slate-700 overflow-hidden">
           <Collapsible
             open={isFiltersOpen}
             onOpenChange={setIsFiltersOpen}
