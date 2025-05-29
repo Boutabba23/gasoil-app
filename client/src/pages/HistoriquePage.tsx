@@ -451,7 +451,6 @@ const HistoriquePage: React.FC = () => {
           {(activeSearchTerm ||
             activeDateRange?.from ||
             activeDateRange?.to) && (
-            <CardDescription className="text-xs"> ... </CardDescription>
           )}
         </CardHeader>
         <CardContent>
