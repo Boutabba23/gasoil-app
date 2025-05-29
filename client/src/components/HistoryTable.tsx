@@ -541,13 +541,13 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                 />
               </TableHead>
             )}
-            <TableHead className="w-[130px]">Date</TableHead>
-            <TableHead className="w-[100px]">Heure</TableHead>
-            <TableHead className="text-right w-[90px]">Jauge (cm)</TableHead>
-            <TableHead className="text-right w-[110px]">Volume (L)</TableHead>
-            <TableHead className="w-[100px]">Utilisateur</TableHead>
+            <TableHead className="w-[60px]">Date</TableHead>
+            <TableHead className="w-[60px]">Heure</TableHead>
+            <TableHead className="text-right w-[60px]">Jauge (cm)</TableHead>
+            <TableHead className="text-right w-[60px]">Volume (L)</TableHead>
+            <TableHead className="w-[80px]">Utilisateur</TableHead>
             {isAdmin && (
-              <TableHead className="text-center w-[70px]">Actions</TableHead>
+              <TableHead className="text-center w-[40px]">Actions</TableHead>
             )}
           </TableRow>
         </TableHeader>
