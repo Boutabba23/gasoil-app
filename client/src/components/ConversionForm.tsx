@@ -165,7 +165,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
       <div>
         <Label
           htmlFor="cm-value"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          className="text-sm mb-2 font-medium text-gray-700 dark:text-gray-300"
         >
           Valeur de Jauge (en cm)
         </Label>
@@ -174,7 +174,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
           type="number"
           value={cmValueString}
           onChange={handleCmInputChange}
-          placeholder="Entrer une valeur Entre 0 et 250 (cm), Exemple: 135"
+          placeholder="Entrer une valeur Entre 0 et 250 (cm)"
           min="0"
           max="250"
           maxLength={3}
@@ -187,7 +187,8 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-[60%] flex justify-center  py-2 px-4 border border-transparent rounded-full shadow-md text-md font-medium text-white bg-myprimary hover:bg-mysecondary focus:outline-none focus:ring-2 hover:cursor-pointer focus:ring-offset-2 h-12 mb-8 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+          variant={"customStyle"}
+          size={"lg"}
         >
           {isLoading ? (
             <>

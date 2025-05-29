@@ -11,7 +11,7 @@ import ConversionForm, {
   type ConversionSuccessData,
 } from "../components/ConversionForm"; // Import type
 import { Progress } from "@/components/ui/progress";
-import { Lightbulb } from "lucide-react";
+//import { Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "../lib/api"; // Assuming you might want to fetch initial state
 interface ConversionRecordForLatest {
@@ -196,19 +196,19 @@ const ConversionPage: React.FC = () => {
               Nouvelle Mesure de Jauge
             </CardTitle>
             <CardDescription className="mb-12">
-              Entrez la valeur de la jauge (0-259 cm) pour calculer le volume et
+              Entrez la valeur de la jauge (0-250 cm) pour calculer le volume et
               enregistrer une nouvelle mesure.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <ConversionForm onConversionSuccess={handleConversionSuccess} />
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md text-sm text-blue-700 dark:text-blue-300 flex items-start">
+            {/* <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md text-sm text-blue-700 dark:text-blue-300 flex items-start">
               <Lightbulb className="h-5 w-5 mr-3 mt-0.5 shrink-0 text-blue-500" />
               <p>
                 Pour une lecture précise, assurez-vous que la jauge est propre
                 et maintenue verticalement.
               </p>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
