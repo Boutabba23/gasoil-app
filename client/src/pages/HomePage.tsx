@@ -94,35 +94,6 @@ const HomePage: React.FC = () => {
               Se connecter avec Google
             </Button>
           </div>
-          {/* 👇 UPDATED FOOTER 👇 */}
-          <motion.footer
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            className="absolute bottom-5 text-center w-full px-4" // Added text-center, w-full, px-4
-          >
-            <div className="text-xs sm:text-sm text-slate-200/80 text-shadow-xs space-x-4">
-              <span>
-                © {new Date().getFullYear()} VotreNomDeSociete. Tous droits
-                réservés.
-              </span>
-              <span className="opacity-50">|</span>
-              <Link
-                to="/privacy-policy"
-                className="hover:underline hover:text-white"
-              >
-                Politique de Confidentialité
-              </Link>
-              <span className="opacity-50">|</span>
-              <Link
-                to="/terms-of-service"
-                className="hover:underline hover:text-white"
-              >
-                Conditions d'Utilisation
-              </Link>
-            </div>
-          </motion.footer>
-          {/* 👆 END UPDATED FOOTER 👆 */}
         </motion.div>
         {/* Footer is now part of the normal document flow, below the motion.div */}
       </div>{" "}
@@ -140,19 +111,35 @@ const HomePage: React.FC = () => {
         // `sm:relative` resets fixed positioning to normal flow.
         // `sm:mt-auto` makes it stick to bottom of flex parent if content is short, OR pushes down if content is long.
         // `sm:py-5` adjusts padding for larger screens.
-        className="w-full text-center text-xs sm:text-sm 
+      >
+        <div
+          className="w-full text-center text-xs sm:text-sm 
         text-slate-700/70 dark:text-slate-300/70 
         bg-transparent
         sm:relative sm:mt-auto   /* Normal flow on sm+ */
         max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:py-3 max-sm:bg-white/20 max-sm:dark:bg-black/30 max-sm:backdrop-blur-sm max-sm:z-10 /* Fixed on max-sm */
        "
-      >
-        © {new Date().getFullYear()} Boutabba Larab. Tous droits réservés.
+        >
+          <span>
+            © {new Date().getFullYear()} Boutabba Larab. Tous droits réservés.
+          </span>
+          <div>
+            <Link
+              to="/privacy-policy"
+              className="hover:underline hover:text-mysecondary"
+            >
+              Politique de Confidentialité
+            </Link>
+            <span className="opacity-50"> | </span>
+            <Link
+              to="/terms-of-service"
+              className="hover:underline hover:text-mysecondary"
+            >
+              Conditions d'Utilisation
+            </Link>
+          </div>
+        </div>
       </motion.footer>
-      <div>
-        <a href="">Privacy Policy</a>
-        <a href="">Terms of Service</a>
-      </div>
     </div>
   );
 };
