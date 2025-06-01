@@ -21,7 +21,7 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground hover:cursor-pointer  dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         customStyle:
-          "w-[60%] flex justify-center max-sm:mb-0 py-2 px-4 border border-transparent rounded-full shadow-md text-md font-medium text-white bg-myprimary hover:bg-mysecondary focus:outline-none focus:ring-2 hover:cursor-pointer  focus:ring-offset-2  mb-8 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600",
+          "w-[70%] flex justify-center max-sm:mb-0 py-2 px-4 border border-transparent rounded-full shadow-md text-md font-medium text-white bg-myprimary hover:bg-mysecondary focus:outline-none focus:ring-2 hover:cursor-pointer  focus:ring-offset-2  mb-8 focus:ring-[#ffc9bd] disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
