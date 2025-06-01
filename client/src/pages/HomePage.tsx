@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import VotreLogoSociete from "../assets/tank.svg";
 import googleLogoUrl from "../assets/google.svg";
+import { Link } from "react-router-dom";
 console.log(
   "VITE_API_GOOGLE_LOGIN_URL from import.meta.env:",
   import.meta.env.VITE_API_GOOGLE_LOGIN_URL
@@ -93,6 +94,35 @@ const HomePage: React.FC = () => {
               Se connecter avec Google
             </Button>
           </div>
+          {/* 👇 UPDATED FOOTER 👇 */}
+          <motion.footer
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="absolute bottom-5 text-center w-full px-4" // Added text-center, w-full, px-4
+          >
+            <div className="text-xs sm:text-sm text-slate-200/80 text-shadow-xs space-x-4">
+              <span>
+                © {new Date().getFullYear()} VotreNomDeSociete. Tous droits
+                réservés.
+              </span>
+              <span className="opacity-50">|</span>
+              <Link
+                to="/privacy-policy"
+                className="hover:underline hover:text-white"
+              >
+                Politique de Confidentialité
+              </Link>
+              <span className="opacity-50">|</span>
+              <Link
+                to="/terms-of-service"
+                className="hover:underline hover:text-white"
+              >
+                Conditions d'Utilisation
+              </Link>
+            </div>
+          </motion.footer>
+          {/* 👆 END UPDATED FOOTER 👆 */}
         </motion.div>
         {/* Footer is now part of the normal document flow, below the motion.div */}
       </div>{" "}
@@ -119,6 +149,10 @@ const HomePage: React.FC = () => {
       >
         © {new Date().getFullYear()} Boutabba Larab. Tous droits réservés.
       </motion.footer>
+      <div>
+        <a href="">Privacy Policy</a>
+        <a href="">Terms of Service</a>
+      </div>
     </div>
   );
 };
