@@ -26,6 +26,10 @@ import {
   // Icon for App Logo
   MenuIcon, // Icon for Mobile Sidebar Trigger
   UserCircle,
+  Settings, // Icon for Settings
+  BarChart3, // Icon for Analytics
+  Bell, // Icon for Alerts
+  Wrench, // Icon for Maintenance
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 interface NavItemType {
@@ -41,6 +45,10 @@ const dashboardNavItems: NavItemType[] = [
     icon: SlidersHorizontal,
   },
   { href: "/dashboard/historique", label: "Historique", icon: History },
+  { href: "/dashboard/analytics", label: "Analyse", icon: BarChart3 },
+  { href: "/dashboard/maintenance", label: "Maintenance", icon: Wrench },
+  { href: "/dashboard/alerts", label: "Alertes", icon: Bell },
+  { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 
 const MobileAwareNavLink: React.FC<{

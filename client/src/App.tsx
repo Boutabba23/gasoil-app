@@ -11,8 +11,13 @@ import { AuthProvider } from "./contexts/AuthContext"; // Or from './hooks/useAu
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ConversionPage from "./pages/ConversionPage"; // Should point to the file in src/pages/
 import HistoriquePage from "@/pages/HistoriquePage";
+import SettingsPage from "./pages/SettingsPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import MaintenancePage from "./pages/MaintenancePage";
+import AlertsPage from "./pages/AlertsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
+import OfflineIndicator from "./components/OfflineIndicator";
 
 function App() {
   console.log("App.tsx: Rendering. AuthProvider will wrap Routes.");
@@ -20,6 +25,7 @@ function App() {
     <AuthProvider>
       {" "}
       {/* AuthProvider is the outermost context provider relevant to auth */}
+      <OfflineIndicator />
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -39,6 +45,10 @@ function App() {
               <Route index element={<Navigate to="conversion" replace />} />
               <Route path="conversion" element={<ConversionPage />} />
               <Route path="historique" element={<HistoriquePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="maintenance" element={<MaintenancePage />} />
+              <Route path="alerts" element={<AlertsPage />} />
             </Route>
           </Route>
 

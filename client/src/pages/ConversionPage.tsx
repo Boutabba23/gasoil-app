@@ -11,6 +11,7 @@ import ConversionForm, {
   type ConversionSuccessData,
 } from "../components/ConversionForm"; // Import type
 import { Progress } from "@/components/ui/progress";
+import TankVisualization from "../components/TankVisualization";
 //import { Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "../lib/api"; // Assuming you might want to fetch initial state
@@ -215,30 +216,20 @@ const ConversionPage: React.FC = () => {
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
-              Niveau Citerne Actuel
+              Visualisation du Réservoir
             </CardTitle>
-            {isInitialLoading && (
-              <CardDescription>Chargement du dernier niveau...</CardDescription>
-            )}
-            {!isInitialLoading && lastCmValue !== null && (
-              <CardDescription className="mb-12">
-                Basé sur la dernière mesure :{" "}
-                {lastCmValue.toLocaleString(undefined, {
-                  minimumFractionDigits: 1,
-                  maximumFractionDigits: 1,
-                })}{" "}
-                cm
-              </CardDescription>
-            )}
-            {!isInitialLoading &&
-              currentLitres === null && ( // Show if not loading AND no data
-                <CardDescription>
-                  Effectuez une conversion pour afficher le niveau.
-                </CardDescription>
-              )}
+            <CardDescription>
+              Représentation visuelle du niveau actuel de carburant
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-2 min-h-[200px] h-full flex flex-col justify-center items-center">
-            {" "}
+          <CardContent>
+            <TankVisualization
+              currentLitres={currentLitres}
+              maxLitres={MAX_LITRES}
+              lastCmValue={lastCmValue}
+              isInitialLoading={isInitialLoading}
+            />
+
             {/* Added min-h */}
             {isInitialLoading ? (
               <div className="text-center py-4 text-muted-foreground">
@@ -276,6 +267,7 @@ const ConversionPage: React.FC = () => {
                 </p>
               </div>
             )}
+
             {!isInitialLoading && ( // Only show this tip once loading is done
               <p className="text-xs text-muted-foreground mt-auto pt-4 text-center">
                 Le niveau est mis à jour après chaque nouvelle mesure valide.
