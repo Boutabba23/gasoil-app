@@ -18,6 +18,7 @@ import AlertsPage from "./pages/AlertsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import OfflineIndicator from "./components/OfflineIndicator";
+import { useAuth } from "./hooks/useAuth";
 
 function App() {
   console.log("App.tsx: Rendering. AuthProvider will wrap Routes.");

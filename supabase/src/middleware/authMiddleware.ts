@@ -27,6 +27,37 @@ export const protect = async (req: AuthenticatedRequest, res: Response, next: Ne
     try {
       token = req.headers.authorization.split(' ')[1];
 
+      // Vérifier si c'est un token Supabase (commence généralement par "eyJ")
+      if (token.startsWith("eyJ")) {
+        // Utiliser le token Supabase directement
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        
+        if (error || !user) {
+          console.log("Protect middleware: Supabase user not found or invalid token");
+          res.status(401).json({ message: 'Non autorisé, token Supabase invalide.' });
+          return;
+        }
+        
+        // Récupérer les informations complémentaires du profil
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        // Ajouter l'utilisateur à la requête
+        req.user = {
+          id: user.id,
+          email: user.email,
+          name: profile?.name || user.user_metadata?.name || 'Utilisateur',
+          picture: profile?.avatar_url || user.user_metadata?.avatar_url
+        };
+        
+        next();
+        return;
+      }
+      
+      // Sinon, traiter comme un token JWT personnalisé
       if (!process.env.JWT_SECRET) {
         console.error("Protect middleware: JWT_SECRET is not defined!");
         res.status(500).json({ message: 'Erreur de configuration serveur.' });

@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
-import conversionRoutes from './routes/conversionRoutes';
+import conversionRoutes from './routes/conversionRoutesMinimal';
 
 // Load environment variables
 dotenv.config();

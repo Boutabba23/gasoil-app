@@ -4,33 +4,21 @@ import { motion } from "framer-motion";
 import VotreLogoSociete from "../assets/tank.svg";
 import googleLogoUrl from "../assets/google.svg";
 import { Link } from "react-router-dom";
-console.log(
-  "VITE_API_GOOGLE_LOGIN_URL from import.meta.env:",
-  import.meta.env.VITE_API_GOOGLE_LOGIN_URL
-);
+import { useAuthSimple } from "../hooks/useAuthSimpleEnglish";
 
 const HomePage: React.FC = () => {
-  const handleLogin = () => {
-    // 👇 LOG AT THE VERY START OF THE FUNCTION
-    console.log("HomePage: handleLogin function CALLED!");
-
-    const googleLoginInitiationUrl = import.meta.env.VITE_API_GOOGLE_LOGIN_URL;
-    console.log(
-      "HomePage: VITE_API_GOOGLE_LOGIN_URL =",
-      googleLoginInitiationUrl
-    ); // Log the env var
-
-    if (!googleLoginInitiationUrl) {
-      console.error("ERREUR: VITE_API_GOOGLE_LOGIN_URL n'est pas défini.");
+  const { signInWithGoogle, loading, error } = useAuthSimple();
+  
+  const handleLogin = async () => {
+    try {
+      console.log("HomePage: handleLogin function CALLED!");
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Erreur lors de la connexion:", error);
       alert(
         "Erreur de configuration: Impossible de contacter le service d'authentification."
       );
-      return;
     }
-
-    const authUrlWithPrompt = `${googleLoginInitiationUrl}?prompt=select_account`;
-    console.log("HomePage: Attempting to redirect to:", authUrlWithPrompt);
-    window.location.href = authUrlWithPrompt;
   };
   const logoContainerSizeClasses = "w-32 h-32 md:w-36 md:h-36";
   const logoImageSizeClasses = "w-20 h-20 md:w-24 md:h-24";
@@ -77,6 +65,15 @@ const HomePage: React.FC = () => {
           <p className="text-md sm:text-lg md:text-xl text-[#FA812F] dark:text-slate-300 mb-16 max-w-md mx-auto">
             Votre solution efficace pour le suivi du carburant.
           </p>
+          
+          {/* Affichage des erreurs de débogage */}
+          {error && (
+            <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded mb-6 max-w-md mx-auto text-sm">
+              <p className="font-semibold">Erreur de débogage:</p>
+              <p>{error}</p>
+              <p className="mt-2 text-xs">Si vous voyez ce message, vérifiez la console pour plus de détails.</p>
+            </div>
+          )}
 
           <div className="mt-8 flex justify-center ">
             <Button
@@ -85,13 +82,18 @@ const HomePage: React.FC = () => {
                 console.log("HomePage: Google Login Button CLICKED!");
                 handleLogin(); // Then call your actual handler
               }}
+              disabled={loading}
             >
-              <img
-                src={googleLogoUrl}
-                alt="Google G logo"
-                className="w-5 h-5 mr-3"
-              />
-              Se connecter avec Google
+              {loading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+              ) : (
+                <img
+                  src={googleLogoUrl}
+                  alt="Google G logo"
+                  className="w-5 h-5 mr-3"
+                />
+              )}
+              {loading ? "Connexion..." : "Se connecter avec Google"}
             </Button>
           </div>
         </motion.div>

@@ -19,6 +19,7 @@ function Progress({
         data-slot="progress-indicator"
         className="bg-primary h-full w-full flex-1 transition-all"
         style={{ width: `${value || 0}%` }}
+      />
     </div>
   )
 }
