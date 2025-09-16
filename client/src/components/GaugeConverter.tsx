@@ -24,11 +24,11 @@ export interface ConversionSuccessData {
   cm: number;
 }
 
-interface ConversionFormProps {
+interface GaugeConverterProps {
   onConversionSuccess: (data: ConversionSuccessData) => void;
 }
 
-const ConversionForm: React.FC<ConversionFormProps> = ({
+const GaugeConverter: React.FC<GaugeConverterProps> = ({
   onConversionSuccess,
 }) => {
   const [cmValueString, setCmValueString] = useState<string>("");
@@ -52,7 +52,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
 
     const currentCmInputValue = cmValueString.trim();
     console.log(
-      "ConversionForm handleSubmit: Value of 'cmValueString' at start of submit:",
+      "GaugeConverter handleSubmit: Value of 'cmValueString' at start of submit:",
       `"${currentCmInputValue}"`
     );
 
@@ -62,7 +62,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
     if (!currentCmInputValue) {
       const msg = "Veuillez entrer une valeur.";
       console.log(
-        "ConversionForm handleSubmit: Validation FAILED - input is empty."
+        "GaugeConverter handleSubmit: Validation FAILED - input is empty."
       );
       setInlineError(msg);
       toast.error("Champ Requis", {
@@ -76,7 +76,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
     if (isNaN(numericCmValue) || numericCmValue < 0 || numericCmValue > 250) {
       const msg = `Valeur de jauge invalide. Doit être un nombre entre 0.0 et 250.0. Reçu: "${currentCmInputValue}"`;
       console.log(
-        "ConversionForm handleSubmit: Validation FAILED - value out of range or NaN."
+        "GaugeConverter handleSubmit: Validation FAILED - value out of range or NaN."
       );
       setInlineError(msg);
       toast.error("Valeur Invalide", {
@@ -104,12 +104,12 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
     setIsLoading(true);
     try {
       console.log(
-        `ConversionForm: Attempting API call for cmValue: ${numericCmValue}`
+        `GaugeConverter: Attempting API call for cmValue: ${numericCmValue}`
       );
       const response = await api.post("/data/convert", {
         value_cm: numericCmValue,
       });
-      console.log("ConversionForm: API Response SUCCESS", response.data);
+      console.log("GaugeConverter: API Response SUCCESS", response.data);
 
       const successMessage = `${response.data.value_cm} cm ➜ ${response.data.volume_l} L`;
 
@@ -137,16 +137,16 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
           errorData?.message ||
           err.message ||
           `Erreur serveur (${err.response?.status || "inconnu"})`;
-        console.error("ConversionForm: Axios Error", {
+        console.error("GaugeConverter: Axios Error", {
           status: err.response?.status,
           data: err.response?.data,
           message: err.message,
         });
       } else if (err instanceof Error) {
         errorMessage = err.message;
-        console.error("ConversionForm: Generic Error", err);
+        console.error("GaugeConverter: Generic Error", err);
       } else {
-        console.error("ConversionForm: Unknown Error", err);
+        console.error("GaugeConverter: Unknown Error", err);
       }
 
       setInlineError(errorMessage);
@@ -160,35 +160,93 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
     }
   };
 
+  // Calculate gauge rotation based on input value (0-250 maps to 0-180 degrees)
+  const calculateGaugeRotation = () => {
+    if (!cmValueString) return 0;
+    const value = parseFloat(cmValueString);
+    if (isNaN(value)) return 0;
+    // Map 0-250 to 0-180 degrees
+    return Math.min(180, Math.max(0, (value / 250) * 180));
+  };
+
+  const gaugeRotation = calculateGaugeRotation();
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <Label
-          htmlFor="cm-value"
-          className="text-sm mb-2 font-medium text-gray-700 dark:text-gray-300"
+    <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+        Conversion Jauge
+      </h2>
+
+      {/* Gauge visualization */}
+      <div className="relative w-64 h-32 mb-8">
+        {/* Gauge background */}
+        <div className="absolute inset-0 flex items-end justify-center">
+          <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+        </div>
+
+        {/* Gauge markings */}
+        {[0, 50, 100, 150, 200, 250].map((mark) => (
+          <div
+            key={mark}
+            className="absolute bottom-0 transform origin-bottom"
+            style={{
+              left: `${(mark / 250) * 100}%`,
+              height: mark % 100 === 0 ? "16px" : "10px",
+              width: "2px",
+              backgroundColor: mark % 100 === 0 ? "#4B5563" : "#9CA3AF",
+            }}
+          >
+            <span className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-600 dark:text-gray-400">
+              {mark}
+            </span>
+          </div>
+        ))}
+
+        {/* Gauge needle */}
+        <div
+          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 origin-bottom transition-transform duration-500 ease-out"
+          style={{
+            height: "100%",
+            width: "4px",
+            backgroundColor: "#EF4444",
+            transform: `translateX(-50%) rotate(${gaugeRotation}deg)`,
+            transformOrigin: "bottom center",
+          }}
         >
-          Valeur de Jauge (en cm)
-        </Label>
-        <Input
-          id="cm-value"
-          type="number"
-          value={cmValueString}
-          onChange={handleCmInputChange}
-          placeholder="Entrer une valeur Entre 0 et 250 (cm)"
-          min="0"
-          max="250"
-          maxLength={3}
-          step="1"
-          className="mt-1 block border-2 border-mylight w-full h-12 shadow-sm sm:text-sm rounded-md dark:bg-slate-700 dark:text-slate-50 dark:border-slate-600"
-          required
-        />
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-red-500 rounded-full"></div>
+        </div>
+
+        {/* Center pivot */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-6 h-6 bg-gray-800 dark:bg-gray-200 rounded-full z-10"></div>
       </div>
-      <div className=" flex items-center justify-center mt-12">
+
+      {/* Input form */}
+      <form onSubmit={handleSubmit} className="w-full space-y-4">
+        <div>
+          <Label
+            htmlFor="cm-value"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Valeur de Jauge (cm)
+          </Label>
+          <Input
+            id="cm-value"
+            type="number"
+            value={cmValueString}
+            onChange={handleCmInputChange}
+            placeholder="0-250 cm"
+            min="0"
+            max="250"
+            step="1"
+            className="w-full h-12 text-center text-lg font-semibold border-2 border-blue-300 dark:border-blue-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
         <Button
           type="submit"
           disabled={isLoading}
-          variant={"customStyle"}
-          size={"lg"}
+          className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-300"
         >
           {isLoading ? (
             <>
@@ -199,12 +257,13 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
             "Convertir en Litres"
           )}
         </Button>
-      </div>
+      </form>
 
+      {/* Result display */}
       {!isLoading && inlineError && (
         <Alert
           variant="destructive"
-          className="mt-4 bg-red-50 dark:bg-red-900/30  border-red-300 dark:border-red-700"
+          className="mt-6 w-full bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700"
         >
           <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
           <AlertTitle className="font-semibold text-red-700 dark:text-red-300">
@@ -218,7 +277,7 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
       {!isLoading && !inlineError && result && (
         <Alert
           variant="default"
-          className="mt-4 bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700"
+          className="mt-6 w-full bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700"
         >
           <CheckCircle className="h-5 w-5 text-green-500 dark:text-green-400" />
           <AlertTitle className="font-semibold text-green-700 dark:text-green-300">
@@ -229,8 +288,8 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
           </AlertDescription>
         </Alert>
       )}
-    </form>
+    </div>
   );
 };
 
-export default ConversionForm;
+export default GaugeConverter;
