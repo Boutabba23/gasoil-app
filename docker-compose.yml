@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - CLIENT_URL=http://localhost
+      # MongoDB Atlas connection string will be provided via .env file
+      - MONGODB_URI=${MONGODB_URI}
+      # Add other environment variables as needed
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+      - ADMIN_GOOGLE_ID=${ADMIN_GOOGLE_ID}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+    restart: unless-stopped
