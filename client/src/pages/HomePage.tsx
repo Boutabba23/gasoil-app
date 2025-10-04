@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import VotreLogoSociete from "../assets/tank.svg";
+import VotreLogoSociete from "../../public/tank.svg";
 import googleLogoUrl from "../assets/google.svg";
 import { Link } from "react-router-dom";
 console.log(
