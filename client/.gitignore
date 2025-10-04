@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 
+
+.kombai
+
 # Build output
 dist/
 .next/ # If it were a Next.js app
