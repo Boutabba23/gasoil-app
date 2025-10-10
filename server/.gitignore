@@ -6,8 +6,6 @@ dist/
 
 # Environment variables
 .env
-.env.*
-!.env.example # Make sure you commit server/.env.example
 
 # Other server-specific ignores
 # *.log (if logs are specific to server)
