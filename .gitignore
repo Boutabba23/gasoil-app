@@ -2,7 +2,7 @@
 
 # Node modules (if not handled by sub-gitignores already)
 # node_modules/ # Usually better in sub-project .gitignores
-
+.env
 # OS and IDE specific
 .DS_Store
 Thumbs.db
