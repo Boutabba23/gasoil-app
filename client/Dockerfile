@@ -1,32 +1,29 @@
-# Stage 1: Build the React application
-FROM node:18-alpine AS builder
+# Stage 1: Build the React app
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm and dependencies
+# Install pnpm
 RUN npm install -g pnpm
-RUN pnpm install
 
-# Copy source code
+# Copy package files and install dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile || pnpm install
+
+# Copy source code and build the app
 COPY . .
+RUN pnpm run build
 
-# Build the application
-RUN pnpm build
-
-# Stage 2: Serve the built application with nginx
+# Stage 2: Serve with Nginx
 FROM nginx:alpine
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy the built app from the previous stage
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
+# Copy a custom Nginx config (you’ll create this below)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
-EXPOSE 80
+# Expose port 3000 (Nginx will serve here)
+EXPOSE 3000
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

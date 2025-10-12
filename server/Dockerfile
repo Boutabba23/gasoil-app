@@ -4,21 +4,23 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and pnpm-lock.yaml
+# Copy package files first for layer caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm and dependencies
+# Install pnpm globally
 RUN npm install -g pnpm
-RUN pnpm install
 
-# Copy source code
+# Install dependencies
+RUN pnpm install --frozen-lockfile || pnpm install
+
+# Copy source code after dependencies
 COPY . .
 
-# Build the application
-RUN pnpm build
+# Build the project
+RUN pnpm run build
 
-# Expose port 3001
-EXPOSE 3001
+# Expose backend port
+EXPOSE 5000
 
-# Start the application
+# Start the server
 CMD ["pnpm", "start"]
