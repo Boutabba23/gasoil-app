@@ -128,20 +128,6 @@ export const getConversionHistory = async (req: Request, res: Response): Promise
   // Base query
   const query: mongoose.FilterQuery<typeof Conversion> = {};
 
-  // If the user is NOT an admin, restrict the query to their own data.
-  if (!isUserAdmin) {
-    if (!currentUser || !currentUser.googleId) {
-      // This should theoretically be caught by the 'protect' middleware, but it's a good safeguard.
-      console.log("History access denied: No authenticated user with googleId found.");
-      res.status(401).json({ message: "Utilisateur non authentifié ou ID Google manquant." });
-      return;
-    }
-    query.userId = currentUser.googleId;
-    console.log(`Query restricted to user: ${currentUser.googleId}`);
-  } else {
-    console.log("Admin access: Query will not be restricted by user.");
-  }
-
   // Search Term Filter
   if (req.query.search) {
     const searchTerm = req.query.search as string;
