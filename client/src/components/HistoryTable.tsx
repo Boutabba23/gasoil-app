@@ -469,13 +469,45 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
     }
   };
 
-  if (isLoading && totalItems === 0 && currentPage === 1) {
-    /* ... Initial loading JSX ... */
-  }
-  if (error && totalItems === 0) {
-    /* ... Error JSX ... */
-  }
+  // Initial loading and error states handled inline below
   const showPagination = totalPages > 1 && !isLoading && totalItems > 0;
+
+  // Show loading state for initial page load
+  if (isLoading && totalItems === 0 && currentPage === 1) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="text-muted-foreground">Chargement de l'historique...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && totalItems === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-destructive mb-2">
+              <ListX className="h-12 w-12 mx-auto" />
+            </div>
+            <p className="text-muted-foreground">Erreur lors du chargement des données</p>
+            <Button
+              onClick={() => fetchHistory(currentPage, searchTerm, dateRange)}
+              className="mt-4"
+              variant="outline"
+            >
+              Réessayer
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -522,7 +554,15 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 
       <Table>
         {!isLoading && totalItems === 0 && (
-          <TableCaption> {/* ... Empty state ... */} </TableCaption>
+          <TableCaption>
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <ListX className="h-8 w-8 mb-2" />
+              <p>Aucun historique disponible</p>
+              {(searchTerm || dateRange) && (
+                <p className="text-sm mt-1">Essayez de modifier vos filtres de recherche.</p>
+              )}
+            </div>
+          </TableCaption>
         )}
         <TableHeader>
           <TableRow>
@@ -552,7 +592,26 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {isLoading && history.length > 0}
+          {isLoading && history.length > 0 && (
+            <TableRow>
+              <TableCell colSpan={isAdmin ? 7 : 5} className="text-center py-8">
+                <div className="flex items-center justify-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Chargement des données...</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+          {!isLoading && history.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={isAdmin ? 7 : 5} className="text-center py-8">
+                <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+                  <ListX className="h-6 w-6" />
+                  <span>Aucune donnée trouvée</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
           {!isLoading &&
             history.map((record) => (
               <TableRow
@@ -665,9 +724,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
           </Button>
         </div>
       )}
-      {/* ... AlertDialogs ... */}
-
-      {totalPages > 1 && !isLoading && totalItems > 0}
+      {/* AlertDialogs handled below */}
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
