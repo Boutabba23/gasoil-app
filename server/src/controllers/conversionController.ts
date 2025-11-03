@@ -113,15 +113,34 @@ try {
 
 // --- Get Conversion History ---
 export const getConversionHistory = async (req: Request, res: Response): Promise<void> => {
-  const accessorUser = req.user as IUser | undefined; // For logging who accessed
-  const accessorUserIdForLog = accessorUser?.googleId || accessorUser?._id || 'Système'; 
-  console.log(`User/Accessor ${accessorUserIdForLog} is accessing global conversion history.`);
- 
+  const currentUser = req.user as IUser | undefined;
+  const adminGoogleId = process.env.ADMIN_GOOGLE_ID;
+  const isUserAdmin = currentUser?.googleId === adminGoogleId;
+
+  console.log(
+    `User ${currentUser?.googleId} (Admin: ${isUserAdmin}) is accessing conversion history.`
+  );
+
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
 
-  const query: mongoose.FilterQuery<typeof Conversion> = {}; // No userId filter for global history
+  // Base query
+  const query: mongoose.FilterQuery<typeof Conversion> = {};
+
+  // If the user is NOT an admin, restrict the query to their own data.
+  if (!isUserAdmin) {
+    if (!currentUser || !currentUser.googleId) {
+      // This should theoretically be caught by the 'protect' middleware, but it's a good safeguard.
+      console.log("History access denied: No authenticated user with googleId found.");
+      res.status(401).json({ message: "Utilisateur non authentifié ou ID Google manquant." });
+      return;
+    }
+    query.userId = currentUser.googleId;
+    console.log(`Query restricted to user: ${currentUser.googleId}`);
+  } else {
+    console.log("Admin access: Query will not be restricted by user.");
+  }
 
   // Search Term Filter
   if (req.query.search) {
